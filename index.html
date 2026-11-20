@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F2F7">
+<title>Drop – Leergut-Abholung</title>
+<style>
+/* Plan: Apple-Look. Weiß und Systemgrau als Fläche, ein Grün als einzige Akzentfarbe, große fette Titel, gruppierte Listen, Tab-Leiste unten. */
+:root{
+  --bg:#F2F2F7;
+  --surface:#FFFFFF;
+  --surface-2:#EEEEF2;
+  --ink:#1C1C1E;
+  --muted:#6C6C70;
+  --line:rgba(60,60,67,.14);
+  --brand:#1E9E4A;
+  --brand-ink:#FFFFFF;
+  --brand-soft:#E5F6EA;
+  --warn:#B86E00;
+  --info:#0A6CD6;
+  --danger:#D70015;
+  --water:#A9D3F0;
+  --forest:#D6ECCB;
+  --land:#F7F5F0;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.05);
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#000000;--surface:#1C1C1E;--surface-2:#2C2C2E;--ink:#F2F2F7;--muted:#98989F;--line:rgba(84,84,88,.5);
+    --brand:#30D158;--brand-ink:#04210E;--brand-soft:#0F2E19;--warn:#FFB340;--info:#64B0FF;--danger:#FF6961;
+    --water:#1D3A52;--forest:#16301E;--land:#151517;--shadow:none;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000000;--surface:#1C1C1E;--surface-2:#2C2C2E;--ink:#F2F2F7;--muted:#98989F;--line:rgba(84,84,88,.5);
+  --brand:#30D158;--brand-ink:#04210E;--brand-soft:#0F2E19;--warn:#FFB340;--info:#64B0FF;--danger:#FF6961;
+  --water:#1D3A52;--forest:#16301E;--land:#151517;--shadow:none;color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.4;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--brand) 55%,transparent);outline-offset:2px}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance}
+h1{font-size:34px;font-weight:800;letter-spacing:-.025em;line-height:1.1}
+h2{font-size:22px;font-weight:700;letter-spacing:-.02em}
+h3{font-size:17px;font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+.app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+main{flex:1;padding:12px 16px calc(96px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:22px}
+main.nonav{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+.topbar{display:flex;align-items:center;gap:12px;justify-content:space-between;min-height:44px}
+.eyebrow{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.02em}
+.logo{display:flex;align-items:center;gap:10px}
+.appicon{width:34px;height:34px;border-radius:9px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.appicon svg{width:22px;height:22px}
+.muted{color:var(--muted)}
+.small{font-size:15px}
+.tiny{font-size:13px}
+.row{display:flex;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border-radius:var(--r);padding:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;padding:14px 20px;font-weight:600;font-size:17px;min-height:52px;background:var(--brand);color:var(--brand-ink);text-decoration:none;transition:opacity .12s,transform .08s}
+.btn:active{opacity:.75;transform:scale(.99)}
+.btn.block{width:100%}
+.btn.white{background:#fff;color:#1E9E4A}
+.btn.ghost{background:var(--brand-soft);color:var(--brand)}
+.btn.outline{background:var(--surface);color:var(--ink)}
+.btn.danger{background:var(--surface);color:var(--danger)}
+.btn.sm{min-height:34px;padding:6px 16px;font-size:15px;border-radius:999px}
+.btn svg{width:20px;height:20px}
+.iconbtn{width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2);display:inline-flex;align-items:center;justify-content:center;color:var(--brand)}
+.iconbtn svg{width:20px;height:20px}
+.iconbtn .avatar{width:40px;height:40px;font-size:15px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--surface-2);color:var(--ink);white-space:nowrap}
+.st-offen{color:var(--brand);background:var(--brand-soft)}
+.st-angenommen{color:var(--warn);background:color-mix(in srgb,var(--warn) 13%,transparent)}
+.st-abgeholt{color:var(--info);background:color-mix(in srgb,var(--info) 12%,transparent)}
+.st-abgeschlossen{color:var(--muted);background:var(--surface-2)}
+.value{font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums;white-space:nowrap}
+.getpill{display:inline-flex;align-items:center;background:var(--surface-2);color:var(--brand);font-weight:700;font-size:15px;border-radius:999px;padding:5px 14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.demo-banner{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;padding:0 4px}
+.demo-banner svg{flex:none;margin-top:1px}
+/* Grouped list (App-Store-Stil) */
+.group{background:var(--surface);border-radius:var(--r);overflow:hidden}
+.group>*+*{border-top:.5px solid var(--line)}
+.group .lcard{border-radius:0;background:transparent}
+.group .lcard+.lcard{border-top:0;box-shadow:inset 0 .5px 0 var(--line)}
+.lcard{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;background:var(--surface);border:0;border-radius:var(--r);padding:12px 14px;text-align:left;width:100%}
+.lcard:active{background:var(--surface-2)}
+.thumb{width:64px;height:64px;border-radius:14px;background:var(--brand-soft);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb svg{width:36px;height:36px}
+.lcard .t{font-weight:600;font-size:16px;line-height:1.25;display:block}
+.lcard .m{font-size:14px;color:var(--muted);margin-top:2px;display:block}
+.lcard .s{margin-top:6px;display:block}
+/* Hero (Heute-Karte) */
+.hero{background:linear-gradient(160deg,#2DBE60 0%,#1E9E4A 55%,#17803B 100%);color:#fff;border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hero .eyebrow{color:rgba(255,255,255,.8)}
+.hero h2{font-size:28px;line-height:1.1;letter-spacing:-.025em;padding-right:60px}
+.hero p{margin:0;color:rgba(255,255,255,.9);font-size:16px}
+.hero .deco{position:absolute;right:-6px;top:10px;width:96px;height:96px;opacity:.22;pointer-events:none;color:#fff}
+.hero>*:not(.deco){position:relative}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{background:var(--surface);border-radius:var(--r);padding:14px 12px}
+.tile .n{font-family:var(--font-display);font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tile .l{font-size:13px;color:var(--muted);line-height:1.25}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--surface-2);border-radius:9px;padding:2px}
+.seg button{border:0;background:transparent;border-radius:7px;padding:6px 10px;font-weight:600;font-size:14px;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{background:#636366}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{background:#636366}}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chip{border:0;background:var(--surface);border-radius:999px;padding:7px 15px;font-weight:600;font-size:15px;white-space:nowrap;color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink)}
+.sect-h{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px}
+.link{background:none;border:0;color:var(--brand);font-weight:400;font-size:17px;padding:0;text-decoration:none}
+/* Tab bar */
+nav.bottom{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--surface) 85%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line);padding:6px 8px calc(4px + env(safe-area-inset-bottom));z-index:20}
+nav.bottom .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+nav.bottom button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;color:#8E8E93;padding:4px 0;position:relative}
+nav.bottom button svg{width:26px;height:26px}
+nav.bottom button[aria-current="page"]{color:var(--brand)}
+.badge{position:absolute;top:0;right:calc(50% - 22px);background:#FF3B30;color:#fff;font-size:11px;font-weight:600;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+/* Forms */
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:15px}
+.input,select.input,textarea.input{width:100%;border:0;background:var(--surface-2);border-radius:10px;padding:13px 14px;font-size:17px;outline:none;-webkit-appearance:none;appearance:none}
+.input:focus{box-shadow:0 0 0 2px var(--brand)}
+textarea.input{min-height:84px;resize:vertical}
+.stepper{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:.5px solid var(--line);gap:12px}
+.stepper:last-child{border-bottom:0;padding-bottom:0}
+.stepper:first-child{padding-top:0}
+.stepper .ctl{display:flex;align-items:center;background:var(--surface-2);border-radius:9px;padding:2px}
+.stepper .ctl button{width:44px;height:32px;border-radius:7px;border:0;background:transparent;font-size:22px;font-weight:400;line-height:1;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.stepper .ctl button:active{background:var(--surface)}
+.stepper .ctl output{min-width:38px;text-align:center;font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
+.choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.choice button{border:0;background:var(--surface-2);border-radius:12px;padding:12px;text-align:left;font-weight:600;font-size:15px;display:flex;flex-direction:column;gap:2px}
+.choice button small{font-weight:400;color:var(--muted);font-size:13px}
+.choice button[aria-pressed="true"]{background:var(--brand-soft);box-shadow:inset 0 0 0 2px var(--brand);color:var(--ink)}
+.photo-drop{border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;background:var(--surface-2);cursor:pointer}
+.photo-drop svg{width:30px;height:30px;color:var(--brand);flex:none}
+.photo-prev{width:100%;max-height:220px;object-fit:cover;border-radius:12px}
+.sum{display:flex;justify-content:space-between;padding:5px 0;font-size:16px;gap:12px}
+.sum.total{border-top:.5px solid var(--line);margin-top:6px;padding-top:11px;font-weight:600}
+/* Detail */
+.dhead{border-radius:22px;overflow:hidden;background:var(--brand-soft);height:200px;display:flex;align-items:center;justify-content:center}
+.dhead img{width:100%;height:100%;object-fit:cover}
+.dhead svg{width:96px;height:96px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;font-size:16px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:500}
+.person{display:flex;align-items:center;gap:12px}
+.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex:none;font-size:16px}
+.avatar.lg{width:84px;height:84px;font-size:30px}
+.stars{color:#FF9500;letter-spacing:1px;white-space:nowrap}
+.timeline{display:flex;gap:4px}
+.timeline span{flex:1;height:5px;border-radius:3px;background:var(--surface-2)}
+.timeline span.on{background:var(--brand)}
+.tl-labels{display:grid;grid-template-columns:repeat(4,1fr);font-size:12px;color:var(--muted);margin-top:7px}
+.tl-labels span:nth-child(2),.tl-labels span:nth-child(3){text-align:center}
+.tl-labels span:last-child{text-align:right}
+.maplink{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:var(--r);padding:12px 14px;color:var(--ink);text-decoration:none}
+.maplink .mi{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#7FD38B,#3FA9F5);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.maplink .mi svg{width:22px;height:22px}
+.maplink .chev{margin-left:auto;color:#C4C4C7}
+/* Chat */
+.msgs{flex:1;display:flex;flex-direction:column;gap:6px;padding:8px 0 110px}
+.msg{max-width:78%;padding:9px 14px;border-radius:19px;font-size:16px;line-height:1.3;word-wrap:break-word}
+.msg.me{align-self:flex-end;background:var(--brand);color:var(--brand-ink)}
+.msg.them{align-self:flex-start;background:var(--surface)}
+.msg.sys{align-self:center;background:transparent;color:var(--muted);font-size:12px;text-align:center;padding:4px}
+.msg time{display:block;font-size:11px;opacity:.65;margin-top:2px}
+.composer{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));z-index:20}
+.composer form{max-width:560px;margin:0 auto;display:flex;gap:8px;align-items:center}
+.composer input{flex:1;border:.5px solid var(--line);border-radius:999px;padding:9px 16px;background:var(--surface);font-size:17px;outline:none}
+.composer form button{width:36px;height:36px;border-radius:50%;border:0;background:var(--brand);color:var(--brand-ink);display:flex;align-items:center;justify-content:center;flex:none}
+.composer form button svg{width:20px;height:20px}
+.quick{display:flex;gap:6px;overflow-x:auto;max-width:560px;margin:0 auto 8px;scrollbar-width:none}
+.quick button{border:0;background:var(--surface-2);border-radius:999px;padding:6px 13px;font-size:14px;white-space:nowrap;color:var(--brand);font-weight:500}
+.chatitem{display:flex;gap:12px;align-items:center;padding:12px 14px;background:transparent;border:0;width:100%;text-align:left}
+.chatitem .p{flex:1;min-width:0}
+.chatitem .p .last{font-size:15px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--info);flex:none}
+/* Map */
+.mapbox{position:relative;border-radius:var(--r);overflow:hidden;background:var(--land)}
+.mapbox svg.map{display:block;width:100%;height:auto}
+.map .lbl{font-family:var(--font-body);font-size:8.5px;fill:var(--muted);font-weight:600}
+.map .pin{cursor:pointer}
+.mapcard{position:absolute;left:10px;right:10px;bottom:10px;border-radius:var(--r);box-shadow:0 6px 24px rgba(0,0,0,.18)}
+/* Sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;display:flex;align-items:flex-end;justify-content:center;animation:fade .15s}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:14px 14px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;max-height:88%;overflow:auto;animation:up .22s cubic-bezier(.2,.9,.3,1)}
+.sheet .grab{width:36px;height:5px;border-radius:3px;background:#C7C7CC;align-self:center;margin-top:-10px}
+.rate{display:flex;gap:6px;justify-content:center}
+.rate button{border:0;background:transparent;font-size:38px;line-height:1;color:#D1D1D6;padding:4px}
+.rate button.on{color:#FF9500}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translateX(-50%);background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);color:var(--ink);padding:12px 16px;border-radius:16px;font-size:15px;font-weight:600;z-index:60;max-width:calc(100% - 32px);box-shadow:0 8px 30px rgba(0,0,0,.18);animation:drop .25s;display:flex;gap:10px;align-items:center}
+.toast svg{color:var(--brand)}
+@keyframes drop{from{transform:translate(-50%,-20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+/* Login */
+.login{min-height:100%;display:flex;flex-direction:column;gap:24px;padding:36px 20px calc(28px + env(safe-area-inset-bottom));background:var(--surface)}
+.login .brand{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.login .brand .mark{width:76px;height:76px;border-radius:18px;background:linear-gradient(160deg,#2DBE60,#17803B);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 6px 18px rgba(30,158,74,.3)}
+.login .brand .mark svg{width:46px;height:46px}
+.login .brand p{margin:0;font-size:19px;color:var(--muted);max-width:30ch}
+.login .input{background:var(--bg)}
+.login .seg{background:var(--bg)}
+.demo-acc{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.demo-acc button{border:0;background:var(--bg);border-radius:14px;padding:12px;text-align:left;display:flex;gap:10px;align-items:center}
+.demo-acc button .avatar{width:36px;height:36px;font-size:14px}
+.demo-acc button b{display:block;font-size:15px}
+.demo-acc button small{color:var(--muted);font-size:13px}
+.err{color:var(--danger);font-size:15px;font-weight:500}
+.empty{text-align:center;padding:26px 16px;color:var(--muted);background:var(--surface);border-radius:var(--r);font-size:15px}
+.review{border-top:.5px solid var(--line);padding-top:12px}
+.review:first-child{border-top:0;padding-top:0}
+.list-h{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;padding:0 16px;margin-bottom:-14px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div id="layer"></div>
+
+<script>
+"use strict";
+/* ---------- Icons ---------- */
+const I={
+  logo:'<svg viewBox="0 0 32 32" fill="none"><path d="M13 3h6v5l3 4v15a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V12l3-4V3z" fill="currentColor"/><path d="M12.5 17h7" stroke="var(--brand)" stroke-width="2" stroke-linecap="round"/><path d="M24 8l3-2M25 12h3M8 8L5 6M7 12H4" stroke="currentColor" opacity=".7" stroke-width="2" stroke-linecap="round"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  compass:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+  bottles:'<svg viewBox="0 0 48 48" fill="none"><path d="M14 6h5v6l3 5v23a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V17l3-5z" fill="var(--brand)"/><path d="M28 10h5v5l3 5v20a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V20l3-5z" fill="var(--brand)" opacity=".45"/><path d="M12 26h8M26 28h8" stroke="var(--surface)" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  glass:'<svg viewBox="0 0 48 48" fill="none"><path d="M10 14h28l-3 26a2 2 0 0 1-2 2H15a2 2 0 0 1-2-2z" fill="var(--brand)" opacity=".9"/><path d="M15 10h7v4h-7zM26 8h7v6h-7z" fill="var(--brand)" opacity=".45"/><path d="M17 22v12M24 22v12M31 22v12" stroke="var(--surface)" stroke-width="2" stroke-linecap="round" opacity=".6"/></svg>',
+  crate:'<svg viewBox="0 0 48 48" fill="none"><rect x="6" y="18" width="36" height="22" rx="3" fill="var(--brand)"/><path d="M12 18V8h4v10M20 18V6h4v12M28 18V8h4v10M36 18V10" stroke="var(--brand)" opacity=".5" stroke-width="3.5" stroke-linecap="round"/><path d="M14 26h20" stroke="var(--surface)" stroke-width="3" stroke-linecap="round"/></svg>',
+  plusc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v9M7.5 12h9"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
+  map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6.5v13L9 17l6 3 6-2.5v-13L15 7z"/><path d="M9 4v13M15 7v13"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>',
+  logout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 16l-4-4 4-4M6 12h10"/></svg>',
+};
+
+/* ---------- Constants ---------- */
+const PRICES={einweg:0.25,mehrweg:0.08,kisten:1.50};
+const DISTRICTS={
+  "Mitte":[48.7758,9.1829],"West":[48.7745,9.1530],"Süd":[48.7580,9.1680],"Ost":[48.7850,9.2050],"Nord":[48.7960,9.1800],
+  "Bad Cannstatt":[48.8050,9.2150],"Feuerbach":[48.8150,9.1550],"Zuffenhausen":[48.8330,9.1700],"Weilimdorf":[48.8150,9.1100],
+  "Botnang":[48.7800,9.1250],"Vaihingen":[48.7300,9.1080],"Möhringen":[48.7250,9.1500],"Degerloch":[48.7480,9.1700],
+  "Untertürkheim":[48.7800,9.2500],"Hedelfingen":[48.7600,9.2550],"Plieningen":[48.7020,9.2100],"Mühlhausen":[48.8420,9.2300]
+};
+const AV_COLORS=["#0B6E4F","#2364AA","#8E4CC2","#C2571A","#1F8A70","#B23A62","#5B6B12","#3D5A80"];
+const STEPS=["offen","angenommen","abgeholt","abgeschlossen"];
+const STEP_LABEL={offen:"Offen",angenommen:"Angenommen",abgeholt:"Abgeholt",abgeschlossen:"Erledigt"};
+const STORE_KEY="klirr-demo-v1";
+
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eur=n=>n.toLocaleString("de-DE",{style:"currency",currency:"EUR"});
+const uid=p=>p+Math.random().toString(36).slice(2,9);
+const now=()=>Date.now();
+const MIN=60000,HOUR=3600000,DAY=86400000;
+function initials(n){return n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase()}
+function avatar(u,cls=""){return `<span class="avatar ${cls}" style="background:${u.color}" aria-hidden="true">${esc(initials(u.name))}</span>`}
+function km(a,b){const R=6371,t=x=>x*Math.PI/180;const dLat=t(b[0]-a[0]),dLng=t(b[1]-a[1]);const h=Math.sin(dLat/2)**2+Math.cos(t(a[0]))*Math.cos(t(b[0]))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function fmtKm(d){return d<1?Math.round(d*1000/50)*50+" m":d.toLocaleString("de-DE",{maximumFractionDigits:1})+" km"}
+function ago(t){const d=now()-t;if(d<MIN)return"gerade eben";if(d<HOUR)return`vor ${Math.round(d/MIN)} Min.`;if(d<DAY)return`vor ${Math.round(d/HOUR)} Std.`;const n=Math.round(d/DAY);return n===1?"gestern":`vor ${n} Tagen`}
+function clock(t){return new Date(t).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})}
+function stars(avg){const r=Math.round(avg);return "★".repeat(r)+"☆".repeat(5-r)}
+function amaps(q){return "https://maps.apple.com/?q="+encodeURIComponent(q)}
+function jitter(c){return [c[0]+(Math.random()-.5)*0.008,c[1]+(Math.random()-.5)*0.012]}
+
+/* ---------- Seed data (Demo) ---------- */
+function seed(){
+  const t=now();
+  const users={
+    u1:{id:"u1",name:"Anna Keller",email:"anna@demo.de",pw:"demo",district:"West",role:"giver",paypal:"",bio:"Arbeite viel, Leergut stapelt sich bei mir.",color:AV_COLORS[0],ratings:[{from:"u4",stars:5,text:"Super nett, alles war ordentlich gepackt.",t:t-6*DAY}]},
+    u2:{id:"u2",name:"Herr Weber",email:"weber@demo.de",pw:"demo",district:"Degerloch",role:"giver",paypal:"",bio:"82 Jahre. Die Kisten sind mir inzwischen zu schwer.",color:AV_COLORS[3],ratings:[{from:"u3",stars:5,text:"Sehr freundlich, gab sogar Kaffee.",t:t-12*DAY}]},
+    u3:{id:"u3",name:"Lea Brandt",email:"lea@demo.de",pw:"demo",district:"Vaihingen",role:"collector",paypal:"leabrandt",bio:"Studentin an der Uni Stuttgart, mit Lastenrad unterwegs.",color:AV_COLORS[2],ratings:[{from:"u2",stars:5,text:"Pünktlich und hilfsbereit.",t:t-12*DAY},{from:"u6",stars:5,text:"Schnell und unkompliziert!",t:t-20*DAY},{from:"u5",stars:4,text:"Etwas später als vereinbart, sonst top.",t:t-25*DAY}]},
+    u4:{id:"u4",name:"Mehmet Yılmaz",email:"mehmet@demo.de",pw:"demo",district:"Bad Cannstatt",role:"collector",paypal:"mehmety",bio:"Sammle nebenbei, habe ein Auto für größere Mengen.",color:AV_COLORS[1],ratings:[{from:"u1",stars:5,text:"Zuverlässig, gerne wieder.",t:t-6*DAY},{from:"u7",stars:5,text:"Hat sogar die schweren Kisten aus dem Keller geholt.",t:t-15*DAY}]},
+    u5:{id:"u5",name:"Familie Schulz",email:"schulz@demo.de",pw:"demo",district:"Feuerbach",role:"giver",paypal:"",bio:"Fünf Personen, viel Leergut.",color:AV_COLORS[4],ratings:[]},
+    u6:{id:"u6",name:"Jonas Maier",email:"jonas@demo.de",pw:"demo",district:"Süd",role:"giver",paypal:"",bio:"",color:AV_COLORS[5],ratings:[{from:"u3",stars:5,text:"Alles vor der Tür bereitgestellt, perfekt.",t:t-20*DAY}]},
+    u7:{id:"u7",name:"Sophie Lang",email:"sophie@demo.de",pw:"demo",district:"Ost",role:"giver",paypal:"",bio:"",color:AV_COLORS[6],ratings:[]},
+    u8:{id:"u8",name:"Karin Hoffmann",email:"karin@demo.de",pw:"demo",district:"Bad Cannstatt",role:"giver",paypal:"",bio:"Nach Knie-OP nicht so mobil.",color:AV_COLORS[7],ratings:[]},
+  };
+  const L=(o)=>Object.assign({id:uid("l"),items:{einweg:0,mehrweg:0,kisten:0,glas:0},glasFee:1,photo:null,handover:"persönlich",payment:"bar",note:"",status:"offen",collectorId:null,ownerRated:false,collectorRated:false,paid:false},o);
+  const pos=d=>jitter(DISTRICTS[d]);
+  const listings=[
+    L({id:"l1",ownerId:"u2",createdAt:t-40*MIN,items:{einweg:0,mehrweg:24,kisten:2,glas:2},glasFee:1.5,district:"Degerloch",street:"Epplestraße 12",pos:pos("Degerloch"),when:"Heute, 16–19 Uhr",handover:"persönlich",payment:"bar",note:"Bitte klingeln, 2. Stock. Die Kisten sind mir zu schwer."}),
+    L({id:"l2",ownerId:"u6",createdAt:t-2*HOUR,items:{einweg:30,mehrweg:0,kisten:0,glas:1},glasFee:1,district:"Süd",street:"Böblinger Str. 88",pos:pos("Süd"),when:"Morgen, 8–12 Uhr",handover:"kontaktlos",payment:"paypal",note:"Steht in zwei Tüten neben der Haustür."}),
+    L({id:"l3",ownerId:"u5",createdAt:t-5*HOUR,items:{einweg:12,mehrweg:20,kisten:1,glas:3},glasFee:1,district:"Feuerbach",street:"Stuttgarter Str. 40",pos:pos("Feuerbach"),when:"Samstag, 10–14 Uhr",handover:"persönlich",payment:"bar"}),
+    L({id:"l4",ownerId:"u7",createdAt:t-25*MIN,items:{einweg:45,mehrweg:0,kisten:0,glas:0},district:"Ost",street:"Neckarstraße 150",pos:pos("Ost"),when:"Heute, 18–21 Uhr",handover:"kontaktlos",payment:"bar",note:"Nur Dosen und PET-Flaschen."}),
+    L({id:"l7",ownerId:"u8",createdAt:t-3*HOUR,items:{einweg:0,mehrweg:10,kisten:0,glas:4},glasFee:1,district:"Bad Cannstatt",street:"Marktstraße 7",pos:pos("Bad Cannstatt"),when:"Morgen, 14–17 Uhr",handover:"persönlich",payment:"paypal",note:"Erdgeschoss, ich öffne gern."}),
+    L({id:"l5",ownerId:"u1",createdAt:t-1*DAY,items:{einweg:18,mehrweg:0,kisten:0,glas:2},glasFee:1,district:"West",street:"Bebelstraße 21",pos:pos("West"),when:"Heute, 19–21 Uhr",handover:"persönlich",payment:"paypal",status:"angenommen",collectorId:"u3"}),
+    L({id:"l6",ownerId:"u1",createdAt:t-7*DAY,items:{einweg:22,mehrweg:12,kisten:1,glas:1},glasFee:1,district:"West",street:"Bebelstraße 21",pos:pos("West"),when:"Letzte Woche",handover:"persönlich",payment:"bar",status:"abgeschlossen",collectorId:"u4",ownerRated:true,collectorRated:true,paid:true}),
+  ];
+  const chats={
+    l5:[{from:"sys",text:"Lea Brandt hat die Abholung übernommen.",t:t-20*HOUR},{from:"u3",text:"Hi Anna! Ich komme heute zwischen 19 und 20 Uhr mit dem Lastenrad vorbei.",t:t-20*HOUR+MIN},{from:"u1",text:"Perfekt, danke! Klingel bei Keller.",t:t-19*HOUR}],
+    l6:[{from:"sys",text:"Mehmet Yılmaz hat die Abholung übernommen.",t:t-7*DAY},{from:"u4",text:"Bin in 15 Minuten da.",t:t-7*DAY+10*MIN},{from:"sys",text:"Abholung abgeschlossen.",t:t-7*DAY+HOUR}],
+  };
+  return {v:1,users,listings,chats,session:null,lastRead:{l5:t-19*HOUR,l6:t}};
+}
+
+/* ---------- Store ---------- */
+let S;
+function load(){try{const raw=localStorage.getItem(STORE_KEY);if(raw){S=JSON.parse(raw);return}}catch(e){}S=seed()}
+function save(){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(S))}
+  catch(e){ // Speicher voll: alte Fotos verwerfen
+    try{S.listings.filter(l=>l.status==="abgeschlossen").forEach(l=>l.photo=null);localStorage.setItem(STORE_KEY,JSON.stringify(S))}catch(e2){}
+  }
+}
+load();
+const me=()=>S.users[S.session];
+const U=id=>S.users[id];
+const LS=id=>S.listings.find(l=>l.id===id);
+const isBot=id=>id&&id!==S.session;
+
+/* ---------- Listing helpers ---------- */
+function pfandValue(l){const i=l.items;return i.einweg*PRICES.einweg+i.mehrweg*PRICES.mehrweg+i.kisten*PRICES.kisten}
+function feeValue(l){return l.items.glas*l.glasFee}
+function totalValue(l){return pfandValue(l)+feeValue(l)}
+function bottleCount(l){return l.items.einweg+l.items.mehrweg}
+function title(l){const i=l.items,p=[];
+  if(i.einweg)p.push(`${i.einweg} Einweg`);if(i.mehrweg)p.push(`${i.mehrweg} Mehrweg`);
+  if(i.kisten)p.push(`${i.kisten} ${i.kisten===1?"Kiste":"Kisten"}`);if(i.glas)p.push(`${i.glas} ${i.glas===1?"Beutel":"Beutel"} Altglas`);
+  return p.join(" · ")||"Leergut"}
+function kindIcon(l){const i=l.items;if(i.kisten)return I.crate;if(i.glas&&!bottleCount(l))return I.glass;return I.bottles}
+function thumb(l){return l.photo?`<img src="${l.photo}" alt="Foto vom Leergut">`:kindIcon(l)}
+function myPos(){return DISTRICTS[me().district]||DISTRICTS.Mitte}
+function avgRating(u){if(!u.ratings.length)return null;return u.ratings.reduce((a,r)=>a+r.stars,0)/u.ratings.length}
+function ratingLine(u){const a=avgRating(u);return a?`<span class="stars" aria-label="${a.toFixed(1)} von 5 Sternen">${stars(a)}</span> <span class="small muted num">${a.toLocaleString("de-DE",{maximumFractionDigits:1})} (${u.ratings.length})</span>`:`<span class="small muted">Noch keine Bewertungen</span>`}
+function pill(st){return `<span class="pill st-${st}">${STEP_LABEL[st]}</span>`}
+function unread(lid){const msgs=S.chats[lid]||[];const lr=S.lastRead[lid]||0;return msgs.filter(m=>m.t>lr&&m.from!==S.session&&m.from!=="sys").length}
+function myChats(){return S.listings.filter(l=>l.collectorId&&(l.ownerId===S.session||l.collectorId===S.session))}
+function totalUnread(){return myChats().reduce((a,l)=>a+unread(l.id),0)}
+
+/* ---------- View state ---------- */
+let view={name:"home"};
+let ui={exploreMode:"list",filter:"alle",mapSel:null,draft:null};
+function go(name,extra={}){view=Object.assign({name},extra);render();window.scrollTo(0,0)}
+
+/* ---------- Toast & Sheet ---------- */
+let toastTimer;
+function toast(msg){const old=$(".toast");if(old)old.remove();const d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.innerHTML=msg;document.body.appendChild(d);clearTimeout(toastTimer);toastTimer=setTimeout(()=>d.remove(),3600)}
+function sheet(html){$("#layer").innerHTML=`<div class="scrim" data-action="close-sheet"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`}
+function closeSheet(){$("#layer").innerHTML=""}
+
+/* ---------- Render: Login ---------- */
+let loginMode="login",loginErr="";
+function renderLogin(){
+  const a=U("u1"),m=U("u4");
+  return `<div class="login">
+    <div class="brand"><div class="mark">${I.logo}</div><h1>Drop</h1><p>Dein Leergut wird abgeholt. Sammler in deiner Nähe bekommen das Pfand.</p></div>
+    <div class="seg" role="group" aria-label="Anmelden oder registrieren">
+      <button data-action="login-mode" data-v="login" aria-pressed="${loginMode==="login"}">Anmelden</button>
+      <button data-action="login-mode" data-v="register" aria-pressed="${loginMode==="register"}">Registrieren</button>
+    </div>
+    <form id="authform" class="stack" novalidate>
+      ${loginMode==="register"?`
+        <label class="f" for="r-name">Name<input class="input" id="r-name" name="name" autocomplete="name" placeholder="z. B. Max Muster" required></label>`:""}
+      <label class="f" for="r-email">E-Mail<input class="input" id="r-email" name="email" type="email" autocomplete="email" placeholder="du@beispiel.de" required></label>
+      <label class="f" for="r-pw">Passwort<input class="input" id="r-pw" name="pw" type="password" autocomplete="${loginMode==="register"?"new-password":"current-password"}" placeholder="mind. 4 Zeichen" required></label>
+      ${loginMode==="register"?`
+        <label class="f" for="r-district">Stadtteil in Stuttgart<select class="input" id="r-district" name="district">${Object.keys(DISTRICTS).map(d=>`<option ${d==="Mitte"?"selected":""}>${d}</option>`).join("")}</select></label>
+        <div class="f"><span>Ich möchte vor allem …</span>
+          <div class="choice" role="group">
+            <button type="button" data-action="reg-role" data-v="giver" aria-pressed="${regRole==="giver"}">Leergut abgeben<small>Ich lasse abholen</small></button>
+            <button type="button" data-action="reg-role" data-v="collector" aria-pressed="${regRole==="collector"}">Sammeln<small>Ich hole ab und verdiene</small></button>
+          </div></div>`:""}
+      ${loginErr?`<div class="err" role="alert">${esc(loginErr)}</div>`:""}
+      <button class="btn block" type="submit">${loginMode==="login"?"Anmelden":"Konto erstellen"}</button>
+    </form>
+    <div class="stack">
+      <div class="small muted">Oder ein Demo-Konto ausprobieren:</div>
+      <div class="demo-acc">
+        <button data-action="demo-login" data-v="u1">${avatar(a)}<span><b>Anna</b><small>gibt Leergut ab</small></span></button>
+        <button data-action="demo-login" data-v="u4">${avatar(m)}<span><b>Mehmet</b><small>sammelt</small></span></button>
+      </div>
+    </div>
+    <div class="demo-banner">${I.info.replace('<svg','<svg width="18" height="18"')}<span>Demo-Version: Alle Daten bleiben nur auf diesem Gerät. Bitte kein echtes Passwort verwenden.</span></div>
+  </div>`;
+}
+let regRole="giver";
+
+/* ---------- Render: Listing card ---------- */
+function lcard(l,opts={}){
+  const d=km(myPos(),l.pos);
+  const own=l.ownerId===S.session;
+  const showSt=opts.status||own||l.collectorId===S.session;
+  return `<button class="lcard" data-action="open" data-id="${l.id}">
+    <span class="thumb">${thumb(l)}</span>
+    <span style="min-width:0">
+      <span class="t">${esc(title(l))}</span>
+      <span class="m">${esc(l.district)} · ${fmtKm(d)} · ${esc(l.when)}</span>
+      ${showSt?`<span class="s">${pill(l.status)}</span>`:`<span class="m">${esc(U(l.ownerId).name)}</span>`}
+    </span>
+    <span class="getpill">${eur(totalValue(l))}</span></button>`;
+}
+function group(ls,opts){return `<div class="group">${ls.map(l=>lcard(l,opts)).join("")}</div>`}
+
+/* ---------- Render: Home ---------- */
+function renderHome(){
+  const u=me();
+  const role=u.role;
+  const today=new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
+  const hi=`<div class="stack" style="gap:14px"><div class="topbar"><div><div class="eyebrow">${today}</div><h1>${role==="giver"?"Abgeben":"Sammeln"}</h1></div>
+      <button class="iconbtn" style="width:40px;height:40px;padding:0;overflow:hidden" data-action="nav" data-v="profile" aria-label="Profil">${avatar(u)}</button></div>
+    <div class="seg" role="group" aria-label="Modus">
+      <button data-action="role" data-v="giver" aria-pressed="${role==="giver"}">Leergut abgeben</button>
+      <button data-action="role" data-v="collector" aria-pressed="${role==="collector"}">Sammeln</button>
+    </div></div>`;
+  if(role==="giver"){
+    const mine=S.listings.filter(l=>l.ownerId===S.session).sort((a,b)=>b.createdAt-a.createdAt);
+    const running=mine.filter(l=>l.status!=="abgeschlossen"),done=mine.filter(l=>l.status==="abgeschlossen");
+    const bottles=done.reduce((a,l)=>a+bottleCount(l),0),glas=done.reduce((a,l)=>a+l.items.glas,0);
+    return `${hi}
+      <div class="hero"><svg class="deco" viewBox="0 0 32 32">${I.logo.replace(/<\/?svg[^>]*>/g,"")}</svg>
+        <div class="eyebrow">Drop · Stuttgart</div><h2>Hallo ${esc(u.name.split(" ")[0])}, wohin mit dem Leergut?</h2>
+        <p>Stell ein, was du hast. Ein Sammler aus der Nähe holt es ab und behält das Pfand.</p>
+        <button class="btn white" data-action="nav" data-v="new">Abholung anfragen</button>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="n">${done.length}</div><div class="l">Abholungen</div></div>
+        <div class="tile"><div class="n">${bottles}</div><div class="l">Flaschen zurück im Kreislauf</div></div>
+        <div class="tile"><div class="n">${glas}</div><div class="l">Beutel Altglas recycelt</div></div>
+      </div>
+      <section class="stack"><div class="sect-h"><h2>Laufend</h2></div>
+        ${running.length?group(running,{status:1}):`<div class="empty">Keine offenen Abholungen.</div>`}
+      </section>
+      ${done.length?`<section class="stack"><h2>Erledigt</h2>${group(done,{status:1})}</section>`:""}`;
+  }
+  const tours=S.listings.filter(l=>l.collectorId===S.session&&l.status!=="abgeschlossen");
+  const done=S.listings.filter(l=>l.collectorId===S.session&&l.status==="abgeschlossen");
+  const earned=done.reduce((a,l)=>a+totalValue(l),0);
+  const near=S.listings.filter(l=>l.status==="offen"&&l.ownerId!==S.session).sort((a,b)=>km(myPos(),a.pos)-km(myPos(),b.pos)).slice(0,3);
+  const avg=avgRating(u);
+  return `${hi}
+    <div class="tiles">
+      <div class="tile"><div class="n">${eur(earned).replace(/\s?€/,"")}<span class="small"> €</span></div><div class="l">verdient</div></div>
+      <div class="tile"><div class="n">${done.length}</div><div class="l">Abholungen</div></div>
+      <div class="tile"><div class="n">${avg?avg.toLocaleString("de-DE",{maximumFractionDigits:1}):"–"}</div><div class="l">Bewertung</div></div>
+    </div>
+    <section class="stack"><h2>Meine Touren</h2>
+      ${tours.length?group(tours,{status:1}):`<div class="empty">Du hast gerade keine Abholung übernommen.</div>`}
+    </section>
+    <section class="stack"><div class="sect-h"><h2>Neu in deiner Nähe</h2><button class="link" data-action="nav" data-v="explore">Alle ansehen</button></div>
+      ${near.length?group(near):`<div class="empty">Gerade keine offenen Anfragen.</div>`}
+    </section>
+    ${done.length?`<section class="stack"><h2>Erledigt</h2>${group(done,{status:1})}</section>`:""}`;
+}
+
+/* ---------- Render: Explore ---------- */
+function filtered(){
+  let ls=S.listings.filter(l=>l.status==="offen"&&l.ownerId!==S.session);
+  if(ui.filter==="pfand")ls=ls.filter(l=>bottleCount(l)||l.items.kisten);
+  if(ui.filter==="glas")ls=ls.filter(l=>l.items.glas);
+  if(ui.filter==="fee")ls=ls.filter(l=>feeValue(l)>0);
+  return ls.sort((a,b)=>km(myPos(),a.pos)-km(myPos(),b.pos));
+}
+function renderExplore(){
+  const ls=filtered();
+  const F=[["alle","Alle"],["pfand","Pfand"],["glas","Altglas"],["fee","Mit Vergütung"]];
+  return `<div class="topbar"><h1>Entdecken</h1>
+      <div class="seg" style="width:180px" role="group" aria-label="Ansicht">
+        <button data-action="emode" data-v="list" aria-pressed="${ui.exploreMode==="list"}" >${I.list.replace('<svg','<svg width="16" height="16"')}Liste</button>
+        <button data-action="emode" data-v="map" aria-pressed="${ui.exploreMode==="map"}" >${I.map.replace('<svg','<svg width="16" height="16"')}Karte</button>
+      </div></div>
+    <div class="chips" role="group" aria-label="Filter">${F.map(([k,v])=>`<button class="chip" data-action="filter" data-v="${k}" aria-pressed="${ui.filter===k}">${v}</button>`).join("")}</div>
+    <div class="small muted">${ls.length} offene ${ls.length===1?"Anfrage":"Anfragen"} in Stuttgart · sortiert nach Entfernung zu ${esc(me().district)}</div>
+    ${ui.exploreMode==="map"?renderMap(ls):(ls.length?group(ls):`<div class="empty">Keine Anfragen für diesen Filter.</div>`)}`;
+}
+
+/* ---------- Map (stilisierte Stuttgart-Karte) ---------- */
+const MB={n:48.865,s:48.690,w:9.060,e:9.300,W:400,H:430};
+function proj(p){return [ (p[1]-MB.w)/(MB.e-MB.w)*MB.W, (MB.n-p[0])/(MB.n-MB.s)*MB.H ]}
+function renderMap(ls){
+  const river=[[48.735,9.300],[48.752,9.280],[48.765,9.262],[48.778,9.252],[48.790,9.236],[48.800,9.222],[48.810,9.212],[48.822,9.212],[48.834,9.224],[48.848,9.234],[48.865,9.240]].map(proj);
+  const rp="M"+river.map(p=>p.map(v=>v.toFixed(1)).join(",")).join(" L");
+  const forests=[[48.762,9.100,46,34],[48.740,9.195,40,26],[48.790,9.145,22,16],[48.706,9.135,34,18],[48.830,9.090,26,18]];
+  const parks=[[48.788,9.192,8,22]];
+  const sel=ui.mapSel&&ls.find(l=>l.id===ui.mapSel);
+  const mp=proj(myPos());
+  return `<div class="mapbox"><svg class="map" viewBox="0 0 ${MB.W} ${MB.H}" role="img" aria-label="Karte von Stuttgart mit ${ls.length} Abholorten">
+    <defs><pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M22 0H0V22" fill="none" stroke="var(--line)" stroke-width=".6"/></pattern></defs>
+    <rect width="100%" height="100%" fill="var(--land)"/>
+    ${forests.map(f=>{const c=proj(f);return `<ellipse cx="${c[0]}" cy="${c[1]}" rx="${f[2]}" ry="${f[3]}" fill="var(--forest)"/>`}).join("")}
+    ${parks.map(f=>{const c=proj(f);return `<ellipse cx="${c[0]}" cy="${c[1]}" rx="${f[2]}" ry="${f[3]}" fill="var(--forest)" transform="rotate(-35 ${c[0]} ${c[1]})"/>`}).join("")}
+    <path d="${rp}" fill="none" stroke="var(--water)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="${proj([48.796,9.240])[0]}" y="${proj([48.796,9.240])[1]}" class="lbl" style="font-style:italic">Neckar</text>
+    ${Object.entries(DISTRICTS).map(([n,p])=>{const c=proj(p);return `<text x="${c[0]}" y="${c[1]+16}" text-anchor="middle" class="lbl">${n}</text>`}).join("")}
+    <g class="me"><circle cx="${mp[0]}" cy="${mp[1]}" r="12" opacity=".2"/><circle cx="${mp[0]}" cy="${mp[1]}" r="5"/></g>
+    ${ls.map(l=>{const c=proj(l.pos);const col=feeValue(l)>0?"var(--brand)":"var(--warn)";const s=ui.mapSel===l.id;
+      return `<g class="pin ${s?"sel":""}" data-action="mapsel" data-id="${l.id}" role="button" tabindex="0" aria-label="${esc(title(l))}, ${esc(l.district)}">
+        <circle cx="${c[0]}" cy="${c[1]}" r="${s?15:12}" fill="${col}" stroke="#fff" stroke-width="2.5"/><text x="${c[0]}" y="${c[1]+3.3}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${Math.round(totalValue(l))}€</text></g>`}).join("")}
+  </svg>
+  ${sel?`<div class="mapcard">${lcard(sel)}</div>`:""}
+  </div>
+  <div class="row small muted wrap"><span class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="var(--brand)"/></svg>mit Altglas-Vergütung</span><span class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="var(--warn)"/></svg>nur Pfand</span><span class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="var(--info)"/></svg>du</span></div>
+  <a class="maplink" href="${amaps(sel?"Stuttgart-"+sel.district:"Stuttgart")}" target="_blank" rel="noopener"><span class="mi">${I.map}</span><span><b>${sel?"Stuttgart-"+esc(sel.district):"Stuttgart"} in Apple Karten</b><br><span class="tiny muted">Echte Karte mit Straßen und Route</span></span><span class="chev">${I.chev}</span></a>
+  <div class="tiny muted">Übersicht der Stadtteile. Die genaue Adresse siehst du erst, wenn du eine Abholung annimmst.</div>`;
+}
+
+/* ---------- Render: New listing ---------- */
+function newDraft(){return {items:{einweg:0,mehrweg:0,kisten:0,glas:0},glasFee:1,photo:null,district:me().district,street:"",when:"Heute, 18–20 Uhr",handover:"persönlich",payment:"bar",note:""}}
+function renderNew(){
+  const d=ui.draft||(ui.draft=newDraft());
+  const tmp={items:d.items,glasFee:d.glasFee};
+  const pf=pfandValue(tmp),fee=feeValue(tmp);
+  const st=(k,lab,sub)=>`<div class="stepper"><div><div style="font-weight:600">${lab}</div><div class="tiny muted">${sub}</div></div>
+    <div class="ctl"><button type="button" data-action="step" data-k="${k}" data-d="${k==="einweg"||k==="mehrweg"?-5:-1}" aria-label="${lab} weniger">−</button><output aria-live="polite">${d.items[k]}</output><button type="button" data-action="step" data-k="${k}" data-d="${k==="einweg"||k==="mehrweg"?5:1}" aria-label="${lab} mehr">+</button></div></div>`;
+  const WHEN=["Heute, 18–20 Uhr","Morgen, 8–12 Uhr","Morgen, 17–20 Uhr","Samstag, 10–14 Uhr"];
+  return `<div class="topbar"><button class="iconbtn" data-action="back" aria-label="Zurück">${I.back}</button><h2 style="flex:1">Abholung anfragen</h2></div>
+  <section class="card stack"><h3>Was hast du?</h3>
+    <div>${st("einweg","Einwegflaschen & Dosen","0,25 € Pfand · +5 pro Tipp")}${st("mehrweg","Mehrwegflaschen","meist 0,08–0,15 € · +5 pro Tipp")}${st("kisten","Getränkekisten","1,50 € Kistenpfand")}${st("glas","Beutel Altglas","kein Pfand, Sammler bekommt Vergütung")}</div>
+  </section>
+  ${d.items.glas?`<section class="card stack"><h3>Vergütung fürs Altglas</h3>
+    <div class="choice" role="group" aria-label="Vergütung pro Beutel">${[0.5,1,1.5,2].map(v=>`<button type="button" data-action="fee" data-v="${v}" aria-pressed="${d.glasFee===v}">${eur(v)}<small>pro Beutel</small></button>`).join("")}</div>
+    <div class="f"><span>Bezahlung an den Sammler</span><div class="choice" role="group">
+      <button type="button" data-action="pay" data-v="bar" aria-pressed="${d.payment==="bar"}">Bar<small>bei der Übergabe</small></button>
+      <button type="button" data-action="pay" data-v="paypal" aria-pressed="${d.payment==="paypal"}">PayPal<small>nach der Abholung</small></button></div></div>
+  </section>`:""}
+  <section class="card stack"><h3>Foto</h3>
+    <label class="photo-drop" for="photo">${d.photo?`<img class="photo-prev" src="${d.photo}" alt="Dein Foto">`:`${I.camera}<span><b>Foto aufnehmen oder wählen</b><br><span class="small muted">Hilft Sammlern, die Menge einzuschätzen.</span></span>`}</label>
+    <input id="photo" type="file" accept="image/*" hidden>
+    ${d.photo?`<button type="button" class="btn ghost sm" data-action="rmphoto">Foto entfernen</button>`:""}
+  </section>
+  <section class="card stack"><h3>Wo und wann?</h3>
+    <label class="f" for="n-district">Stadtteil<select class="input" id="n-district" data-field="district">${Object.keys(DISTRICTS).map(x=>`<option ${x===d.district?"selected":""}>${x}</option>`).join("")}</select></label>
+    <label class="f" for="n-street">Straße und Hausnummer<input class="input" id="n-street" data-field="street" value="${esc(d.street)}" placeholder="z. B. Bebelstraße 21" autocomplete="street-address"></label>
+    <div class="tiny muted">Die genaue Adresse sieht nur der Sammler, der deine Abholung annimmt.</div>
+    <div class="f"><span>Zeitfenster</span><div class="chips" role="group">${WHEN.map(w=>`<button type="button" class="chip" data-action="when" data-v="${esc(w)}" aria-pressed="${d.when===w}">${w}</button>`).join("")}</div></div>
+    <div class="f"><span>Übergabe</span><div class="choice" role="group">
+      <button type="button" data-action="hand" data-v="persönlich" aria-pressed="${d.handover==="persönlich"}">Persönlich<small>ich bin zu Hause</small></button>
+      <button type="button" data-action="hand" data-v="kontaktlos" aria-pressed="${d.handover==="kontaktlos"}">Kontaktlos<small>vor die Tür gestellt</small></button></div></div>
+    <label class="f" for="n-note">Hinweis (optional)<textarea class="input" id="n-note" data-field="note" placeholder="z. B. 3. Stock ohne Aufzug, bitte klingeln">${esc(d.note)}</textarea></label>
+  </section>
+  <section class="card">
+    <div class="sum"><span>Pfand für den Sammler</span><span class="num">${eur(pf)}</span></div>
+    ${d.items.glas?`<div class="sum"><span>Deine Vergütung (${d.items.glas} × ${eur(d.glasFee)})</span><span class="num">${eur(fee)}</span></div>`:""}
+    <div class="sum total"><span>Sammler bekommt</span><span class="value">${eur(pf+fee)}</span></div>
+    <div class="tiny muted" style="margin-top:4px">${fee?`Du zahlst nur die ${eur(fee)} fürs Altglas. Das Pfand behält der Sammler.`:"Für dich kostenlos: Der Sammler behält das Pfand."}</div>
+  </section>
+  ${ui.newErr?`<div class="err" role="alert">${esc(ui.newErr)}</div>`:""}
+  <button class="btn block" data-action="publish">${I.check} Anfrage veröffentlichen</button>`;
+}
+
+/* ---------- Render: Detail ---------- */
+function renderDetail(){
+  const l=LS(view.id);if(!l)return `<div class="empty">Diese Anfrage gibt es nicht mehr.</div>`;
+  const owner=U(l.ownerId),col=l.collectorId?U(l.collectorId):null;
+  const iAmOwner=l.ownerId===S.session,iAmCol=l.collectorId===S.session;
+  const idx=STEPS.indexOf(l.status);
+  const showAddr=iAmOwner||iAmCol;
+  const i=l.items;
+  const pf=pfandValue(l),fee=feeValue(l);
+  let actions="";
+  if(l.status==="offen"&&!iAmOwner)actions=`<button class="btn block" data-action="accept" data-id="${l.id}">${I.check} Abholung übernehmen</button>`;
+  if(l.status==="offen"&&iAmOwner)actions=`<div class="card small muted">Wir suchen einen Sammler in deiner Nähe. Du bekommst eine Nachricht, sobald jemand annimmt.</div><button class="btn danger block" data-action="delete" data-id="${l.id}">Anfrage löschen</button>`;
+  if(l.status==="angenommen"&&iAmCol)actions=`<button class="btn block" data-action="picked" data-id="${l.id}">${I.check} Als abgeholt markieren</button><button class="btn ghost block" data-action="chat" data-id="${l.id}">${I.chat} Nachricht an ${esc(owner.name.split(" ")[0])}</button><button class="btn danger block" data-action="release" data-id="${l.id}">Abholung abgeben</button>`;
+  if(l.status==="angenommen"&&iAmOwner)actions=`<button class="btn ghost block" data-action="chat" data-id="${l.id}">${I.chat} Nachricht an ${esc(col.name.split(" ")[0])}</button>`;
+  if(l.status==="abgeholt"&&iAmOwner)actions=`<button class="btn block" data-action="paysheet" data-id="${l.id}">${fee?`Vergütung zahlen (${eur(fee)})`:"Abholung bestätigen"}</button>`;
+  if(l.status==="abgeholt"&&iAmCol)actions=`<div class="card small muted">Warte auf Bestätigung${fee?" und Zahlung":""} von ${esc(owner.name)}.</div>`;
+  if(l.status==="abgeschlossen"){
+    const need=(iAmOwner&&!l.ownerRated)||(iAmCol&&!l.collectorRated);
+    if(need)actions=`<button class="btn block" data-action="ratesheet" data-id="${l.id}">★ ${esc((iAmOwner?col:owner).name.split(" ")[0])} bewerten</button>`;
+    else if(iAmOwner||iAmCol)actions=`<div class="card small muted row">${I.check.replace('<svg','<svg width="18" height="18"')} Abgeschlossen und bewertet. Danke fürs Recyceln!</div>`;
+  }
+  const other=iAmOwner?col:owner;
+  return `<div class="topbar"><button class="iconbtn" data-action="back" aria-label="Zurück">${I.back}</button>${pill(l.status)}</div>
+  <div class="dhead">${l.photo?`<img src="${l.photo}" alt="Foto vom Leergut">`:kindIcon(l)}</div>
+  <div class="stack" style="gap:6px"><h1 style="font-size:24px">${esc(title(l))}</h1>
+    <div class="muted">${esc(l.district)} · ${fmtKm(km(myPos(),l.pos))} entfernt · eingestellt ${ago(l.createdAt)}</div></div>
+  <div class="card"><div class="timeline">${STEPS.map((s,k)=>`<span class="${k<=idx?"on":""}"></span>`).join("")}</div><div class="tl-labels">${STEPS.map(s=>`<span>${STEP_LABEL[s]}</span>`).join("")}</div></div>
+  <div class="card">
+    ${i.einweg?`<div class="sum"><span>${i.einweg} × Einweg à 0,25 €</span><span class="num">${eur(i.einweg*PRICES.einweg)}</span></div>`:""}
+    ${i.mehrweg?`<div class="sum"><span>${i.mehrweg} × Mehrweg à 0,08 €</span><span class="num">${eur(i.mehrweg*PRICES.mehrweg)}</span></div>`:""}
+    ${i.kisten?`<div class="sum"><span>${i.kisten} × Kiste à 1,50 €</span><span class="num">${eur(i.kisten*PRICES.kisten)}</span></div>`:""}
+    ${i.glas?`<div class="sum"><span>${i.glas} × Beutel Altglas à ${eur(l.glasFee)}</span><span class="num">${eur(fee)}</span></div>`:""}
+    <div class="sum total"><span>Für den Sammler</span><span class="value">≈ ${eur(pf+fee)}</span></div>
+  </div>
+  <dl class="card kv">
+    <dt>Wann</dt><dd>${esc(l.when)}</dd>
+    <dt>Wo</dt><dd>${showAddr?esc(l.street)+", ":""}Stuttgart-${esc(l.district)}${showAddr?"":` <span class="tiny muted">(Adresse nach Annahme)</span>`}</dd>
+    <dt>Übergabe</dt><dd>${l.handover==="persönlich"?"Persönlich":"Kontaktlos vor der Tür"}</dd>
+    ${fee?`<dt>Bezahlung</dt><dd>${l.payment==="paypal"?"PayPal":"Bar"} (${eur(fee)} fürs Altglas)</dd>`:""}
+    ${l.note?`<dt>Hinweis</dt><dd style="font-weight:400">${esc(l.note)}</dd>`:""}
+  </dl>
+  <a class="maplink" href="${amaps(showAddr?l.street+", Stuttgart":"Stuttgart-"+l.district)}" target="_blank" rel="noopener"><span class="mi">${I.map}</span><span><b>${showAddr?"Route in Apple Karten":"Stadtteil in Apple Karten"}</b><br><span class="tiny muted">${showAddr?esc(l.street)+", Stuttgart":"Stuttgart-"+esc(l.district)}</span></span><span class="chev">${I.chev}</span></a>
+  ${other?`<button class="card person" style="text-align:left;width:100%" data-action="profile" data-id="${other.id}">${avatar(other)}<span style="flex:1"><b>${esc(other.name)}</b><br><span class="tiny muted">${iAmOwner?"Sammler":"Gibt ab"} · ${esc(other.district)}</span><br>${ratingLine(other)}</span></button>`:""}
+  ${actions}`;
+}
+
+/* ---------- Render: Chats ---------- */
+function renderChats(){
+  const cs=myChats().map(l=>({l,last:(S.chats[l.id]||[]).slice(-1)[0]})).sort((a,b)=>(b.last?.t||0)-(a.last?.t||0));
+  return `<h1>Nachrichten</h1>
+  ${cs.length?`<div class="group">${cs.map(({l,last})=>{const o=U(l.ownerId===S.session?l.collectorId:l.ownerId);const n=unread(l.id);
+    return `<button class="chatitem" data-action="chat" data-id="${l.id}">${avatar(o)}<span class="p"><span class="row between"><b>${esc(o.name)}</b><span class="tiny muted">${last?ago(last.t):""}</span></span><span class="tiny muted">${esc(title(l))}</span><div class="last">${last?esc(last.from===S.session?"Du: "+last.text:last.text):""}</div></span>${n?`<span class="dot" aria-label="${n} ungelesen"></span>`:""}</button>`}).join("")}</div>`
+  :`<div class="empty">Noch keine Nachrichten. Sobald eine Abholung angenommen wird, könnt ihr hier schreiben.</div>`}`;
+}
+function renderChat(){
+  const l=LS(view.id);const o=U(l.ownerId===S.session?l.collectorId:l.ownerId);
+  S.lastRead[l.id]=now();save();
+  const msgs=S.chats[l.id]||[];
+  const QUICK=l.collectorId===S.session?["Bin unterwegs!","Bin in 10 Minuten da.","Bin vor der Tür."]:["Danke!","Klingel bitte unten.","Steht vor der Tür."];
+  return `<div class="topbar" style="position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:5"><button class="iconbtn" data-action="back" aria-label="Zurück">${I.back}</button>
+    <button class="person" style="flex:1;border:0;background:none;text-align:left;padding:0" data-action="open" data-id="${l.id}">${avatar(o)}<span><b>${esc(o.name)}</b><br><span class="tiny muted">${esc(title(l))} · ${STEP_LABEL[l.status]}</span></span></button></div>
+  <div class="msgs" id="msgs">${msgs.map(m=>m.from==="sys"?`<div class="msg sys">${esc(m.text)}</div>`:`<div class="msg ${m.from===S.session?"me":"them"}">${esc(m.text)}<time>${clock(m.t)}</time></div>`).join("")}
+    <div id="typing"></div></div>
+  <div class="composer"><div class="quick">${QUICK.map(q=>`<button data-action="quick" data-v="${esc(q)}">${q}</button>`).join("")}</div>
+    <form id="chatform"><input id="chatin" autocomplete="off" placeholder="Nachricht schreiben" aria-label="Nachricht"><button type="submit" aria-label="Senden">${I.send}</button></form></div>`;
+}
+
+/* ---------- Render: Profile ---------- */
+function renderProfile(){
+  const u=view.id?U(view.id):me();const own=u.id===S.session;
+  const a=avgRating(u);
+  return `${view.id&&!own?`<div class="topbar"><button class="iconbtn" data-action="back" aria-label="Zurück">${I.back}</button></div>`:`<h1>Profil</h1>`}
+  <div class="card stack" style="align-items:center;text-align:center">${avatar(u,"lg")}
+    <div><h2>${esc(u.name)}</h2><div class="muted small">Stuttgart-${esc(u.district)} · ${u.role==="collector"?"Sammelt":"Gibt Leergut ab"}</div></div>
+    <div>${ratingLine(u)}</div>
+    ${u.bio?`<p class="small" style="margin:0;max-width:40ch">${esc(u.bio)}</p>`:""}
+  </div>
+  ${own?`<section class="card stack"><h3>Einstellungen</h3>
+    <label class="f" for="p-district">Stadtteil<select class="input" id="p-district" data-pfield="district">${Object.keys(DISTRICTS).map(x=>`<option ${x===u.district?"selected":""}>${x}</option>`).join("")}</select></label>
+    <label class="f" for="p-paypal">PayPal.me-Name <span class="tiny muted" style="font-weight:400">damit Abgeber dir die Vergütung schicken können</span>
+      <input class="input" id="p-paypal" data-pfield="paypal" value="${esc(u.paypal)}" placeholder="z. B. maxmuster" autocapitalize="off"></label>
+    <label class="f" for="p-bio">Über mich<textarea class="input" id="p-bio" data-pfield="bio" placeholder="Ein Satz über dich">${esc(u.bio)}</textarea></label>
+    <button class="btn block" data-action="saveprofile">Speichern</button>
+  </section>`:""}
+  <section class="card stack"><h3>Bewertungen</h3>
+    ${u.ratings.length?u.ratings.slice().sort((x,y)=>y.t-x.t).map(r=>{const f=U(r.from);return `<div class="review"><div class="row between"><b class="small">${esc(f?f.name:"Jemand")}</b><span class="stars small">${stars(r.stars)}</span></div>${r.text?`<div class="small">${esc(r.text)}</div>`:""}<div class="tiny muted">${ago(r.t)}</div></div>`}).join(""):`<div class="small muted">Noch keine Bewertungen.</div>`}
+  </section>
+  ${own?`<section class="stack">
+    <button class="btn ghost block" data-action="about">${I.info} Über diese Demo</button>
+    <button class="btn outline block" data-action="logout">${I.logout} Abmelden</button>
+    <button class="btn danger block" data-action="reset">Demo zurücksetzen</button></section>`:""}`;
+}
+
+/* ---------- Main render ---------- */
+function render(){
+  const app=$("#app");
+  if(!S.session||!U(S.session)){app.innerHTML=renderLogin();return}
+  const nav=!["chat","new","detail"].includes(view.name)&&!(view.name==="profile"&&view.id&&view.id!==S.session);
+  let body="";
+  switch(view.name){
+    case"explore":body=renderExplore();break;case"new":body=renderNew();break;case"detail":body=renderDetail();break;
+    case"chats":body=renderChats();break;case"chat":body=renderChat();break;case"profile":body=renderProfile();break;default:body=renderHome();
+  }
+  const cur=view.name==="chat"?"chats":view.name;
+  const tu=totalUnread();
+  app.innerHTML=`<main class="${nav?"":"nonav"}">${body}</main>${nav?`<nav class="bottom" aria-label="Hauptnavigation"><div class="in">
+    <button data-action="nav" data-v="home" ${cur==="home"?'aria-current="page"':""}>${I.home}Start</button>
+    <button data-action="nav" data-v="explore" ${cur==="explore"?'aria-current="page"':""}>${I.compass}Entdecken</button>
+    <button data-action="nav" data-v="new" ${cur==="new"?'aria-current="page"':""}>${I.plusc}Anfragen</button>
+    <button data-action="nav" data-v="chats" ${cur==="chats"?'aria-current="page"':""}>${I.chat}Chats${tu?`<span class="badge">${tu}</span>`:""}</button>
+    <button data-action="nav" data-v="profile" ${cur==="profile"?'aria-current="page"':""}>${I.user}Profil</button>
+  </div></nav>`:""}`;
+  if(view.name==="chat"){const m=$("#msgs");window.scrollTo(0,document.body.scrollHeight)}
+}
+
+/* ---------- Actions ---------- */
+function addMsg(lid,from,text){(S.chats[lid]=S.chats[lid]||[]).push({from,text,t:now()});save()}
+function refreshIf(names){if(names.includes(view.name))render();else if(document.querySelector("nav.bottom"))render()}
+function rerenderKeepScroll(){const y=window.scrollY;render();window.scrollTo(0,y)}
+
+function acceptListing(l,collectorId){
+  l.status="angenommen";l.collectorId=collectorId;
+  addMsg(l.id,"sys",`${U(collectorId).name} hat die Abholung übernommen.`);
+}
+function completeIfPaid(l){l.status="abgeschlossen";l.paid=true;addMsg(l.id,"sys","Abholung abgeschlossen.")}
+
+/* ---------- Demo-Simulation (andere Nutzer antworten automatisch) ---------- */
+const timers={};
+function later(key,ms,fn){if(timers[key])return;timers[key]=setTimeout(()=>{delete timers[key];if(!S.session)return;fn();save();rerenderKeepScroll();scheduleSims()},ms)}
+function botReply(lid,ms=1800){
+  const l=LS(lid);if(!l)return;const other=l.ownerId===S.session?l.collectorId:l.ownerId;if(!isBot(other))return;
+  const fromCol=other===l.collectorId;
+  const pool=fromCol?["Alles klar, bis gleich!","Passt, ich melde mich kurz vorher.","Danke für die Info 👍","Super, dann bis später!"]:["Danke dir!","Alles klar, ist vorbereitet.","Prima, bis dann!","Klingel einfach bei mir."];
+  showTyping();
+  later("reply-"+lid,ms,()=>{addMsg(lid,other,pool[Math.floor(Math.random()*pool.length)]);if(view.name!=="chat"||view.id!==lid)toast(`${I.chat.replace('<svg','<svg width="18" height="18"')} Neue Nachricht von ${esc(U(other).name)}`)});
+}
+function showTyping(){const t=$("#typing");if(t)t.innerHTML=`<div class="msg them" style="opacity:.6">schreibt …</div>`}
+function scheduleSims(){
+  S.listings.forEach(l=>{
+    // Eigene offene Anfrage: Bot-Sammler nimmt an
+    if(l.ownerId===S.session&&l.status==="offen"){
+      later("acc-"+l.id,7000,()=>{if(l.status!=="offen")return;const cands=["u4","u3"].filter(id=>id!==S.session);
+        const c=cands.sort((a,b)=>km(DISTRICTS[U(a).district],l.pos)-km(DISTRICTS[U(b).district],l.pos))[0];
+        acceptListing(l,c);addMsg(l.id,c,`Hallo ${U(l.ownerId).name.split(" ")[0]}! Ich übernehme gern. ${l.when} passt mir. Bis dann!`);
+        toast(`${I.check.replace('<svg','<svg width="18" height="18"')} ${esc(U(c).name)} holt dein Leergut ab`);});
+    }
+    // Eigene angenommene Anfrage mit Bot-Sammler: Bot holt ab
+    if(l.ownerId===S.session&&l.status==="angenommen"&&isBot(l.collectorId)){
+      later("pick-"+l.id,l.id==="l5"?25000:16000,()=>{if(l.status!=="angenommen")return;l.status="abgeholt";
+        addMsg(l.id,l.collectorId,"Alles abgeholt, danke! 🙌");addMsg(l.id,"sys","Als abgeholt markiert.");
+        toast(`${esc(U(l.collectorId).name)} hat dein Leergut abgeholt. Bitte bestätigen.`);});
+    }
+  });
+}
+
+/* ---------- Event handling ---------- */
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-action]");if(!el)return;
+  const a=el.dataset.action,v=el.dataset.v,id=el.dataset.id;
+  switch(a){
+    case"close-sheet":if(el.classList.contains("scrim")&&e.target!==el)break;closeSheet();break;
+    case"login-mode":loginMode=v;loginErr="";render();break;
+    case"reg-role":regRole=v;document.querySelectorAll('[data-action="reg-role"]').forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v));break;
+    case"demo-login":S.session=v;save();go("home");scheduleSims();toast(`Angemeldet als ${esc(U(v).name)}`);break;
+    case"nav":if(v==="new")ui.draft=null,ui.newErr="";go(v);break;
+    case"back":history.length&&view.from?go(view.from.name,view.from):go(view.name==="chat"?"chats":"home");break;
+    case"role":me().role=v;save();render();break;
+    case"emode":ui.exploreMode=v;render();break;
+    case"filter":ui.filter=v;ui.mapSel=null;render();break;
+    case"mapsel":ui.mapSel=ui.mapSel===id?null:id;rerenderKeepScroll();break;
+    case"open":go("detail",{id,from:{...view}});break;
+    case"profile":go("profile",{id,from:{...view}});break;
+    case"chat":go("chat",{id,from:{...view}});break;
+    case"step":{const d=ui.draft,k=el.dataset.k;captureDraft();d.items[k]=Math.max(0,d.items[k]+Number(el.dataset.d));rerenderKeepScroll();break}
+    case"fee":captureDraft();ui.draft.glasFee=Number(v);rerenderKeepScroll();break;
+    case"pay":captureDraft();ui.draft.payment=v;rerenderKeepScroll();break;
+    case"when":captureDraft();ui.draft.when=v;rerenderKeepScroll();break;
+    case"hand":captureDraft();ui.draft.handover=v;rerenderKeepScroll();break;
+    case"rmphoto":captureDraft();ui.draft.photo=null;rerenderKeepScroll();break;
+    case"publish":publish();break;
+    case"accept":{const l=LS(id);acceptListing(l,S.session);save();
+      later("ownerhi-"+id,2200,()=>{addMsg(id,l.ownerId,`Danke, ${me().name.split(" ")[0]}! Adresse: ${l.street}. ${l.handover==="kontaktlos"?"Steht vor der Tür.":"Klingel einfach."}`);toast(`${I.chat.replace('<svg','<svg width="18" height="18"')} ${esc(U(l.ownerId).name)} hat geantwortet`)});
+      toast(`${I.check.replace('<svg','<svg width="18" height="18"')} Abholung übernommen. Die Adresse ist jetzt sichtbar.`);rerenderKeepScroll();break}
+    case"release":{const l=LS(id);l.status="offen";addMsg(id,"sys",`${me().name} hat die Abholung wieder freigegeben.`);l.collectorId=null;save();toast("Abholung freigegeben");go("home");break}
+    case"delete":{S.listings=S.listings.filter(l=>l.id!==id);delete S.chats[id];save();toast("Anfrage gelöscht");go("home");break}
+    case"picked":{const l=LS(id);l.status="abgeholt";addMsg(id,"sys","Als abgeholt markiert.");save();rerenderKeepScroll();
+      const fee=feeValue(l);
+      later("paid-"+id,2600,()=>{const o=U(l.ownerId);
+        if(fee)addMsg(id,l.ownerId,l.payment==="paypal"?`Danke! Hab dir ${eur(fee)} per PayPal geschickt.`:`Danke! Die ${eur(fee)} hast du ja bar bekommen.`);
+        else addMsg(id,l.ownerId,"Vielen Dank fürs Abholen!");
+        completeIfPaid(l);me().ratings.push({from:o.id,stars:5,text:"Schnell und freundlich, gerne wieder!",t:now()});l.ownerRated=true;
+        toast(`${esc(o.name)} hat bestätigt${fee?" und bezahlt":""}. Du hast ${eur(totalValue(l))} verdient!`);});
+      break}
+    case"paysheet":paySheet(LS(id));break;
+    case"paid":{const l=LS(id);completeIfPaid(l);
+      const c=U(l.collectorId);if(isBot(c.id)){c&&addMsg(id,c.id,"Danke, ist angekommen! 😊");}
+      save();closeSheet();rerenderKeepScroll();rateSheet(l);break}
+    case"ratesheet":rateSheet(LS(id));break;
+    case"star":{rating.stars=Number(v);document.querySelectorAll(".rate button").forEach(b=>b.classList.toggle("on",Number(b.dataset.v)<=rating.stars));break}
+    case"sendrating":{const l=LS(id);const iAmOwner=l.ownerId===S.session;const target=U(iAmOwner?l.collectorId:l.ownerId);
+      if(!rating.stars){$("#rate-err").textContent="Bitte wähle 1 bis 5 Sterne.";break}
+      target.ratings.push({from:S.session,stars:rating.stars,text:($("#rate-text").value||"").trim(),t:now()});
+      if(iAmOwner)l.ownerRated=true;else l.collectorRated=true;
+      if(isBot(target.id)&&iAmOwner&&!l.collectorRated){me().ratings.push({from:target.id,stars:5,text:"Alles gut vorbereitet, danke!",t:now()});l.collectorRated=true}
+      save();closeSheet();toast("Danke für deine Bewertung!");rerenderKeepScroll();break}
+    case"quick":sendChat(v);break;
+    case"saveprofile":{const u=me();document.querySelectorAll("[data-pfield]").forEach(i=>u[i.dataset.pfield]=i.value.trim());save();toast("Profil gespeichert");render();break}
+    case"logout":S.session=null;save();Object.values(timers).forEach(clearTimeout);for(const k in timers)delete timers[k];loginMode="login";render();break;
+    case"reset":sheet(`<h2>Demo zurücksetzen?</h2><p class="muted" style="margin:0">Alle Anfragen, Chats und Konten auf diesem Gerät werden auf den Anfangszustand gesetzt.</p><button class="btn danger block" data-action="doreset">Zurücksetzen</button><button class="btn ghost block" data-action="close-sheet">Abbrechen</button>`);break;
+    case"doreset":try{localStorage.removeItem(STORE_KEY)}catch(e){}Object.values(timers).forEach(clearTimeout);for(const k in timers)delete timers[k];S=seed();closeSheet();go("home");break;
+    case"about":sheet(`<h2>Über diese Demo</h2>
+      <p style="margin:0">Drop ist ein Uni-Prototyp für Stuttgart. Er zeigt, wie Leute ihr Pfand und Altglas abholen lassen und Sammler damit etwas verdienen können.</p>
+      <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">
+        <li>Konten, Anfragen und Chats werden nur auf diesem Gerät gespeichert.</li>
+        <li>Die anderen Personen sind Beispielfiguren und antworten automatisch.</li>
+        <li>PayPal-Links führen zur echten PayPal-Seite. Bitte in der Demo nichts bezahlen.</li>
+        <li>Pfandwerte: Einweg 0,25 €, Mehrweg meist 0,08 € (Glas) bis 0,15 €, Kiste 1,50 €.</li>
+      </ul>
+      <button class="btn block" data-action="close-sheet">Verstanden</button>`);break;
+  }
+});
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("g.pin")){e.preventDefault();e.target.dispatchEvent(new MouseEvent("click",{bubbles:true}))}});
+
+function captureDraft(){const d=ui.draft;if(!d)return;document.querySelectorAll("[data-field]").forEach(i=>d[i.dataset.field]=i.value)}
+document.addEventListener("input",e=>{if(e.target.dataset.field&&ui.draft)ui.draft[e.target.dataset.field]=e.target.value});
+document.addEventListener("change",e=>{
+  if(e.target.id==="photo"&&e.target.files[0]){captureDraft();compress(e.target.files[0]).then(url=>{ui.draft.photo=url;rerenderKeepScroll()}).catch(()=>toast("Foto konnte nicht geladen werden."))}
+  if(e.target.dataset.field&&ui.draft)ui.draft[e.target.dataset.field]=e.target.value;
+});
+function compress(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{const m=720,s=Math.min(1,m/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.7))};img.src=r.result};r.readAsDataURL(file)})}
+
+function publish(){
+  captureDraft();const d=ui.draft;
+  if(!(d.items.einweg||d.items.mehrweg||d.items.kisten||d.items.glas)){ui.newErr="Bitte gib an, was abgeholt werden soll.";rerenderKeepScroll();return}
+  if(!d.street.trim()){ui.newErr="Bitte gib Straße und Hausnummer an.";rerenderKeepScroll();$("#n-street")?.focus();return}
+  ui.newErr="";
+  const l={id:uid("l"),ownerId:S.session,createdAt:now(),items:{...d.items},glasFee:d.glasFee,photo:d.photo,district:d.district,street:d.street.trim(),pos:jitter(DISTRICTS[d.district]),when:d.when,handover:d.handover,payment:d.payment,note:d.note.trim(),status:"offen",collectorId:null,ownerRated:false,collectorRated:false,paid:false};
+  S.listings.unshift(l);save();ui.draft=null;
+  toast(`${I.check.replace('<svg','<svg width="18" height="18"')} Anfrage veröffentlicht. Wir suchen einen Sammler …`);
+  go("detail",{id:l.id,from:{name:"home"}});scheduleSims();
+}
+
+function paySheet(l){
+  const c=U(l.collectorId),fee=feeValue(l);
+  if(!fee){completeIfPaid(l);save();rerenderKeepScroll();rateSheet(l);return}
+  const link=c.paypal?`https://www.paypal.com/paypalme/${encodeURIComponent(c.paypal)}/${fee.toFixed(2)}EUR`:null;
+  sheet(`<h2>${eur(fee)} an ${esc(c.name.split(" ")[0])} zahlen</h2>
+    <p class="muted" style="margin:0">Vergütung für ${l.items.glas} Beutel Altglas. Das Pfand behält ${esc(c.name.split(" ")[0])} automatisch.</p>
+    ${l.payment==="paypal"?(link?`<a class="btn block" href="${link}" target="_blank" rel="noopener">Mit PayPal zahlen</a><div class="tiny muted">Öffnet paypal.me/${esc(c.paypal)}. In der Demo bitte nichts bezahlen.</div>`:`<div class="card small">${esc(c.name)} hat noch keinen PayPal-Namen hinterlegt. Bitte bar zahlen.</div>`)
+      :`<div class="card small">Vereinbart ist Barzahlung bei der Übergabe.</div>`}
+    <button class="btn ${l.payment==="paypal"?"ghost":""} block" data-action="paid" data-id="${l.id}">${I.check} ${l.payment==="paypal"?"Ich habe bezahlt":"Bar bezahlt"}</button>`);
+}
+let rating={stars:0};
+function rateSheet(l){
+  rating={stars:0};const iAmOwner=l.ownerId===S.session;const t=U(iAmOwner?l.collectorId:l.ownerId);
+  sheet(`<div class="row" style="justify-content:center">${avatar(t,"lg")}</div><h2 style="text-align:center">Wie war es mit ${esc(t.name.split(" ")[0])}?</h2>
+    <div class="rate" role="group" aria-label="Sterne">${[1,2,3,4,5].map(n=>`<button data-action="star" data-v="${n}" aria-label="${n} Sterne">★</button>`).join("")}</div>
+    <label class="f" for="rate-text">Kommentar (optional)<textarea class="input" id="rate-text" placeholder="${iAmOwner?"z. B. pünktlich und freundlich":"z. B. alles gut vorbereitet"}"></textarea></label>
+    <div class="err" id="rate-err" role="alert"></div>
+    <button class="btn block" data-action="sendrating" data-id="${l.id}">Bewertung abschicken</button>`);
+}
+
+function sendChat(text){
+  text=(text||"").trim();if(!text)return;addMsg(view.id,S.session,text);render();botReply(view.id);
+}
+document.addEventListener("submit",e=>{
+  e.preventDefault();
+  if(e.target.id==="chatform"){const i=$("#chatin");const t=i.value;i.value="";sendChat(t);setTimeout(()=>$("#chatin")?.focus(),0)}
+  if(e.target.id==="authform"){
+    const f=new FormData(e.target);const email=String(f.get("email")||"").trim().toLowerCase(),pw=String(f.get("pw")||"");
+    if(loginMode==="login"){
+      const u=Object.values(S.users).find(x=>x.email===email&&x.pw===pw);
+      if(!u){loginErr="E-Mail oder Passwort stimmt nicht. Tipp: anna@demo.de / demo";render();return}
+      S.session=u.id;loginErr="";save();go("home");scheduleSims();
+    }else{
+      const name=String(f.get("name")||"").trim();
+      if(!name||!email.includes("@")||pw.length<4){loginErr="Bitte Name, gültige E-Mail und ein Passwort mit mindestens 4 Zeichen angeben.";render();return}
+      if(Object.values(S.users).some(x=>x.email===email)){loginErr="Diese E-Mail ist schon registriert. Bitte anmelden.";render();return}
+      const id=uid("u");S.users[id]={id,name,email,pw,district:String(f.get("district")),role:regRole,paypal:"",bio:"",color:AV_COLORS[Object.keys(S.users).length%AV_COLORS.length],ratings:[]};
+      S.session=id;loginErr="";save();go("home");toast(`Willkommen bei Drop, ${esc(name.split(" ")[0])}!`);
+    }
+  }
+});
+
+render();
+if(S.session)scheduleSims();
+</script>
+</body>
+</html>
