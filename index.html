@@ -256,12 +256,36 @@ textarea.input{min-height:84px;resize:vertical}
 .locbtn svg{width:22px;height:22px}
 .leaflet-top.leaflet-right .leaflet-control-zoom{border:0;box-shadow:0 2px 8px rgba(0,0,0,.2);border-radius:10px;overflow:hidden}
 #mapcard .lcard{box-shadow:var(--shadow)}
+/* Tutorial */
+.tut{position:fixed;inset:0;z-index:80;background:var(--surface);display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom));animation:fade .2s}
+.tut .top{display:flex;justify-content:space-between;align-items:center;min-height:44px;max-width:520px;width:100%;margin:0 auto}
+.tut .skip{border:0;background:none;color:var(--muted);font-size:17px;padding:8px 0}
+.tut .slide{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;max-width:520px;width:100%;margin:0 auto;animation:tutin .25s ease}
+@keyframes tutin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.tut .art{width:132px;height:132px;border-radius:34px;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;align-self:center;position:relative}
+.tut .art svg{width:66px;height:66px}
+.tut .art.logo{background:linear-gradient(160deg,#2DBE60,#17803B);color:#fff;box-shadow:0 10px 30px rgba(30,158,74,.3)}
+.tut .art .mini{position:absolute;right:-10px;bottom:-10px;width:48px;height:48px;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;color:var(--brand)}
+.tut .art .mini svg{width:26px;height:26px}
+.tut h2{font-size:30px;text-align:center;letter-spacing:-.025em;line-height:1.1}
+.tut p{margin:0;text-align:center;color:var(--muted);font-size:17px;line-height:1.45}
+.tut ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.tut li{display:flex;gap:12px;align-items:flex-start;background:var(--bg);border-radius:14px;padding:12px 14px;font-size:16px}
+.tut li b{display:block}
+.tut li .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.tut .bottom{display:flex;flex-direction:column;gap:14px;max-width:520px;width:100%;margin:0 auto}
+.tut .dots{display:flex;gap:7px;justify-content:center}
+.tut .dots span{width:7px;height:7px;border-radius:4px;background:var(--line);transition:width .2s}
+.tut .dots span.on{width:22px;background:var(--brand)}
+.tut .navrow{display:flex;gap:10px}
+.tut .navrow .btn{flex:1}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app" id="app"></div>
 <div id="layer"></div>
+<div id="tut"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
@@ -348,7 +372,7 @@ async function loadAll(){
   const [profiles,listings,priv,messages,ratings]=await Promise.all([
     q(sb.from("profiles").select("*")),q(sb.from("listings").select("*")),q(sb.from("listing_private").select("*")),
     q(sb.from("messages").select("*")),q(sb.from("ratings").select("*"))]);
-  const users={};profiles.forEach(p=>users[p.id]={id:p.id,avatar:p.avatar_url||null,name:p.name,district:p.district,role:p.role,paypal:p.paypal,bio:p.bio,color:p.color,ratings:[]});
+  const users={};profiles.forEach(p=>users[p.id]={id:p.id,avatar:p.avatar_url||null,name:p.name,district:p.district,role:p.role,paypal:p.paypal,bio:p.bio,color:p.color,created:p.created_at?ts(p.created_at):0,ratings:[]});
   ratings.forEach(r=>{if(users[r.to_id])users[r.to_id].ratings.push({from:r.from_id,stars:r.stars,text:r.text,t:ts(r.created_at)})});
   const pv={};priv.forEach(p=>pv[p.listing_id]=p);
   const chats={};messages.slice().sort((a,b)=>ts(a.created_at)-ts(b.created_at)||a.id-b.id).forEach(m=>(chats[m.listing_id]=chats[m.listing_id]||[]).push({from:m.sender_id||"sys",text:m.text,t:ts(m.created_at)}));
@@ -761,6 +785,7 @@ function renderProfile(){
     ${u.ratings.length?u.ratings.slice().sort((x,y)=>y.t-x.t).map(r=>{const f=U(r.from);return `<div class="review"><div class="row between"><b class="small">${esc(f?f.name:"Jemand")}</b><span class="stars small">${stars(r.stars)}</span></div>${r.text?`<div class="small">${esc(r.text)}</div>`:""}<div class="tiny muted">${ago(r.t)}</div></div>`}).join(""):`<div class="small muted">Noch keine Bewertungen.</div>`}
   </section>
   ${own?`<section class="stack">
+    <button class="btn ghost block" data-action="tutorial">${I.compass} Kurze Einführung ansehen</button>
     <button class="btn ghost block" data-action="about">${I.info} Über Drop</button>
     <button class="btn outline block" data-action="logout">${I.logout} Abmelden</button></section>`:""}`;
 }
@@ -835,6 +860,7 @@ document.addEventListener("click",async e=>{
       await q(sb.from("profiles").update(upd).eq("id",S.session));await refresh();toast("Profil gespeichert")});break;
     case"rmavatar":busy(el,async()=>{await q(sb.from("profiles").update({avatar_url:null}).eq("id",S.session));await refresh();toast("Profilbild entfernt")});break;
     case"logout":busy(el,async()=>{await sb.auth.signOut()});break;
+    case"tutorial":showTutorial();break;
     case"about":sheet(`<h2>Über Drop</h2>
       <p style="margin:0">Drop ist ein Uni-Prototyp für Stuttgart. Leute lassen ihr Pfand und Altglas abholen, Sammler behalten das Pfand und bekommen fürs Altglas eine kleine Vergütung.</p>
       <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">
@@ -946,12 +972,68 @@ document.addEventListener("submit",async e=>{
         if(!name||!email.includes("@")||pw.length<6){loginErr="Bitte Name, gültige E-Mail und ein Passwort mit mindestens 6 Zeichen angeben.";render();return}
         const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{name,district:String(f.get("district")),role:regRole},emailRedirectTo:location.origin+location.pathname}});
         if(error){loginErr=errText(error);render();return}
-        if(!data.session){loginMode="login";loginInfo="Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige den Link und melde dich dann hier an.";render()}
-        else toast(`Willkommen bei Drop, ${esc(name.split(" ")[0])}!`);
+        if(!data.session){justRegistered=true;loginMode="login";loginInfo="Fast geschafft! Wir haben dir eine E-Mail geschickt. Bitte bestätige den Link und melde dich dann hier an.";render()}
+        else justRegistered=true;
       }
     });
   }
 });
+
+/* ---------- Tutorial beim ersten Start ---------- */
+const TUT_KEY=()=>"drop-tut-"+S.session;
+function tutSeen(){try{return localStorage.getItem(TUT_KEY())==="1"}catch(e){return false}}
+function setTutSeen(){try{localStorage.setItem(TUT_KEY(),"1")}catch(e){}}
+let tut=null;
+function tutSlides(){
+  const u=me(),first=esc(u.name.split(" ")[0]),col=u.role==="collector";
+  const step=(n,t,d)=>`<li><span class="n">${n}</span><span><b>${t}</b>${d}</span></li>`;
+  return [
+    {art:`<div class="art logo">${I.logo}</div>`,html:`<h2>Willkommen bei Drop, ${first}!</h2><p>Drop verbindet Leute mit Leergut und Sammler aus der Nachbarschaft. Hier siehst du in vier kurzen Schritten, wie es funktioniert.</p>`},
+    {art:`<div class="art">${I.bottles}<span class="mini">${I.plusc}</span></div>`,html:`<h2>Leergut abgeben</h2><ul>
+      ${step(1,"Tippe unten auf „Anfragen“","Gib an, wie viele Flaschen, Kisten oder Beutel Altglas du hast.")}
+      ${step(2,"Foto und Zeitfenster","Ein Foto hilft beim Einschätzen. Wähle Tag und Uhrzeit, wann du da bist.")}
+      ${step(3,"Deine Adresse bleibt privat","Sie sieht nur der Sammler, der deine Abholung annimmt.")}</ul>`},
+    {art:`<div class="art">${I.map}<span class="mini">${I.compass}</span></div>`,html:`<h2>Sammeln und verdienen</h2><ul>
+      ${step(1,"Tippe auf „Entdecken“","Sieh dir offene Anfragen in der Liste oder auf der Karte an.")}
+      ${step(2,"„Abholung übernehmen“","Danach siehst du die Adresse und kannst losfahren.")}
+      ${step(3,"Pfand gehört dir","Fürs Altglas zahlt der Abgeber dir zusätzlich bar oder per PayPal. Trag dafür im Profil deinen PayPal.me-Namen ein.")}</ul>`},
+    {art:`<div class="art">${I.chat}<span class="mini">${I.check}</span></div>`,html:`<h2>Chatten, abholen, bewerten</h2><ul>
+      ${step(1,"Im Chat absprechen","Sobald jemand annimmt, könnt ihr euch schreiben.")}
+      ${step(2,"Abgeholt und bestätigt","Der Sammler markiert „abgeholt“, der Abgeber bestätigt und zahlt die Vergütung.")}
+      ${step(3,"Gegenseitig bewerten","Sterne schaffen Vertrauen für die nächste Abholung.")}</ul>`},
+    {art:`<div class="art">${I.user}<span class="mini">${I.camera}</span></div>`,html:`<h2>Alles bereit!</h2><p>Oben auf der Startseite wechselst du jederzeit zwischen <b>Leergut abgeben</b> und <b>Sammeln</b>. Im Profil kannst du ein Foto hinzufügen. Damit wissen andere, wer klingelt.</p>`,
+     cta:col?["Anfragen in der Nähe ansehen","explore"]:["Erste Abholung anfragen","new"]},
+  ];
+}
+function showTutorial(){tut={i:0};renderTut();setTimeout(()=>$("#tut .btn")?.focus(),50)}
+function renderTut(){
+  const sl=tutSlides(),i=tut.i,s=sl[i],last=i===sl.length-1;
+  $("#tut").innerHTML=`<div class="tut" role="dialog" aria-modal="true" aria-label="Kurze Einführung, Schritt ${i+1} von ${sl.length}">
+    <div class="top"><span class="tiny muted">${i+1} / ${sl.length}</span>${last?"<span></span>":`<button class="skip" data-action="tut-skip">Überspringen</button>`}</div>
+    <div class="slide" id="tutslide">${s.art}${s.html}</div>
+    <div class="bottom"><div class="dots" aria-hidden="true">${sl.map((_,k)=>`<span class="${k===i?"on":""}"></span>`).join("")}</div>
+      ${last?`<button class="btn block" data-action="tut-cta" data-v="${s.cta[1]}">${s.cta[0]}</button><button class="btn outline block" data-action="tut-done">Erst mal umsehen</button>`
+        :`<div class="navrow">${i?`<button class="btn outline" data-action="tut-prev" style="flex:0 0 auto;padding:14px 18px" aria-label="Zurück">${I.back}</button>`:""}<button class="btn" data-action="tut-next">${i?"Weiter":"Los geht's"}</button></div>`}
+    </div></div>`;
+}
+function closeTutorial(){setTutSeen();tut=null;$("#tut").innerHTML=""}
+document.addEventListener("click",e=>{
+  const el=e.target.closest("#tut [data-action]");if(!el||!tut)return;
+  const a=el.dataset.action,n=tutSlides().length;
+  if(a==="tut-next"){tut.i=Math.min(tut.i+1,n-1);renderTut()}
+  if(a==="tut-prev"){tut.i=Math.max(tut.i-1,0);renderTut()}
+  if(a==="tut-skip"||a==="tut-done")closeTutorial();
+  if(a==="tut-cta"){closeTutorial();if(el.dataset.v==="new"){ui.draft=null;ui.newErr=""}go(el.dataset.v)}
+});
+let tx=null;
+document.addEventListener("touchstart",e=>{if(tut&&e.target.closest("#tut"))tx=e.touches[0].clientX},{passive:true});
+document.addEventListener("touchend",e=>{if(!tut||tx===null)return;const dx=e.changedTouches[0].clientX-tx;tx=null;const n=tutSlides().length;
+  if(dx<-50&&tut.i<n-1){tut.i++;renderTut()}else if(dx>50&&tut.i>0){tut.i--;renderTut()}},{passive:true});
+document.addEventListener("keydown",e=>{if(!tut)return;const n=tutSlides().length;
+  if(e.key==="ArrowRight"&&tut.i<n-1){tut.i++;renderTut()}if(e.key==="ArrowLeft"&&tut.i>0){tut.i--;renderTut()}if(e.key==="Escape")closeTutorial()});
+function maybeTutorial(){const u=me();if(!u||tutSeen())return;
+  const isNew=justRegistered||(u.created&&now()-u.created<2*DAY);if(isNew)showTutorial();else setTutSeen()}
+let justRegistered=false;
 
 /* ---------- Start ---------- */
 let booted=false;
@@ -967,10 +1049,11 @@ async function startSession(session){
     subscribe();
     if(!booted){booted=true;view={name:"home"}}
     render();
+    maybeTutorial();
   }catch(e){console.error(e);$("#app").innerHTML=`<div class="login"><h2>Verbindung fehlgeschlagen</h2><p class="muted">${esc(errText(e))}</p><button class="btn" onclick="location.reload()">Neu laden</button></div>`}
 }
 sb.auth.onAuthStateChange((event,session)=>{
-  if(event==="SIGNED_OUT"||!session){S.session=null;S.loaded=false;booted=false;unsubscribe();clearMaps();loginMode="login";render();return}
+  if(event==="SIGNED_OUT"||!session){tut=null;$("#tut").innerHTML="";S.session=null;S.loaded=false;booted=false;unsubscribe();clearMaps();loginMode="login";render();return}
   if((event==="SIGNED_IN"||event==="INITIAL_SESSION")&&session.user.id!==S.session)setTimeout(()=>startSession(session),0);
 });
 $("#app").innerHTML=renderLoading();
