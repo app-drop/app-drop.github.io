@@ -11,6 +11,7 @@ create table if not exists public.profiles (
   paypal text not null default '',
   bio text not null default '',
   color text not null default '#1E9E4A',
+  avatar_url text,
   created_at timestamptz not null default now()
 );
 
@@ -64,6 +65,12 @@ create table if not exists public.ratings (
   created_at timestamptz not null default now(),
   unique (listing_id, from_id)
 );
+
+-- Nachträglich ergänzte Spalten (für bestehende Datenbanken)
+alter table public.profiles add column if not exists avatar_url text;
+alter table public.profiles drop constraint if exists avatar_url_storage;
+alter table public.profiles add constraint avatar_url_storage
+  check (avatar_url is null or avatar_url like 'https://%.supabase.co/storage/v1/object/public/photos/%');
 
 create index if not exists listings_status_idx on public.listings(status);
 create index if not exists messages_listing_idx on public.messages(listing_id, created_at);

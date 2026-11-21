@@ -166,6 +166,13 @@ textarea.input{min-height:84px;resize:vertical}
 .person{display:flex;align-items:center;gap:12px}
 .avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex:none;font-size:16px}
 .avatar.lg{width:84px;height:84px;font-size:30px}
+.avatar{overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avedit{position:relative;display:inline-block;cursor:pointer;border-radius:50%}
+.avedit .avatar.lg{width:96px;height:96px;font-size:34px}
+.avedit .cam{position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:50%;background:var(--brand);color:#fff;border:3px solid var(--surface);display:flex;align-items:center;justify-content:center}
+.avedit .cam svg{width:16px;height:16px}
+.avedit.busy{opacity:.5;pointer-events:none}
 .stars{color:#FF9500;letter-spacing:1px;white-space:nowrap}
 .timeline{display:flex;gap:4px}
 .timeline span{flex:1;height:5px;border-radius:3px;background:var(--surface-2)}
@@ -303,7 +310,7 @@ const uid=p=>p+Math.random().toString(36).slice(2,9);
 const now=()=>Date.now();
 const MIN=60000,HOUR=3600000,DAY=86400000;
 function initials(n){return n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase()}
-function avatar(u,cls=""){return `<span class="avatar ${cls}" style="background:${u.color}" aria-hidden="true">${esc(initials(u.name))}</span>`}
+function avatar(u,cls=""){return `<span class="avatar ${cls}" style="background:${u.color}" aria-hidden="true">${u.avatar?`<img src="${esc(u.avatar)}" alt="" loading="lazy">`:esc(initials(u.name))}</span>`}
 function km(a,b){const R=6371,t=x=>x*Math.PI/180;const dLat=t(b[0]-a[0]),dLng=t(b[1]-a[1]);const h=Math.sin(dLat/2)**2+Math.cos(t(a[0]))*Math.cos(t(b[0]))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 function fmtKm(d){return d<1?Math.round(d*1000/50)*50+" m":d.toLocaleString("de-DE",{maximumFractionDigits:1})+" km"}
 function ago(t){const d=now()-t;if(d<MIN)return"gerade eben";if(d<HOUR)return`vor ${Math.round(d/MIN)} Min.`;if(d<DAY)return`vor ${Math.round(d/HOUR)} Std.`;const n=Math.round(d/DAY);return n===1?"gestern":`vor ${n} Tagen`}
@@ -339,7 +346,7 @@ async function loadAll(){
   const [profiles,listings,priv,messages,ratings]=await Promise.all([
     q(sb.from("profiles").select("*")),q(sb.from("listings").select("*")),q(sb.from("listing_private").select("*")),
     q(sb.from("messages").select("*")),q(sb.from("ratings").select("*"))]);
-  const users={};profiles.forEach(p=>users[p.id]={id:p.id,name:p.name,district:p.district,role:p.role,paypal:p.paypal,bio:p.bio,color:p.color,ratings:[]});
+  const users={};profiles.forEach(p=>users[p.id]={id:p.id,avatar:p.avatar_url||null,name:p.name,district:p.district,role:p.role,paypal:p.paypal,bio:p.bio,color:p.color,ratings:[]});
   ratings.forEach(r=>{if(users[r.to_id])users[r.to_id].ratings.push({from:r.from_id,stars:r.stars,text:r.text,t:ts(r.created_at)})});
   const pv={};priv.forEach(p=>pv[p.listing_id]=p);
   const chats={};messages.slice().sort((a,b)=>ts(a.created_at)-ts(b.created_at)||a.id-b.id).forEach(m=>(chats[m.listing_id]=chats[m.listing_id]||[]).push({from:m.sender_id||"sys",text:m.text,t:ts(m.created_at)}));
@@ -705,7 +712,7 @@ function renderProfile(){
   const u=view.id?U(view.id):me();const own=u.id===S.session;
   const a=avgRating(u);
   return `${view.id&&!own?`<div class="topbar"><button class="iconbtn" data-action="back" aria-label="Zurück">${I.back}</button></div>`:`<h1>Profil</h1>`}
-  <div class="card stack" style="align-items:center;text-align:center">${avatar(u,"lg")}
+  <div class="card stack" style="align-items:center;text-align:center">${own?`<label class="avedit" id="avedit" for="avatar-in" aria-label="Profilbild ändern">${avatar(u,"lg")}<span class="cam">${I.camera}</span></label><input id="avatar-in" type="file" accept="image/*" hidden>${u.avatar?`<button class="link small" data-action="rmavatar" style="font-size:15px">Bild entfernen</button>`:`<span class="tiny muted">Tippe aufs Bild, um ein Foto hinzuzufügen</span>`}`:avatar(u,"lg")}
     <div><h2>${esc(u.name)}</h2><div class="muted small">Stuttgart-${esc(u.district)} · ${u.role==="collector"?"Sammelt":"Gibt Leergut ab"}</div></div>
     <div>${ratingLine(u)}</div>
     ${u.bio?`<p class="small" style="margin:0;max-width:40ch">${esc(u.bio)}</p>`:""}
@@ -794,6 +801,7 @@ document.addEventListener("click",async e=>{
       if(!upd.name){toast("Bitte gib einen Namen an.");return}
       upd.paypal=upd.paypal.replace(/^https?:\/\/(www\.)?paypal\.me\//i,"").replace(/[^A-Za-z0-9_.-]/g,"");
       await q(sb.from("profiles").update(upd).eq("id",S.session));await refresh();toast("Profil gespeichert")});break;
+    case"rmavatar":busy(el,async()=>{await q(sb.from("profiles").update({avatar_url:null}).eq("id",S.session));await refresh();toast("Profilbild entfernt")});break;
     case"logout":busy(el,async()=>{await sb.auth.signOut()});break;
     case"about":sheet(`<h2>Über Drop</h2>
       <p style="margin:0">Drop ist ein Uni-Prototyp für Stuttgart. Leute lassen ihr Pfand und Altglas abholen, Sammler behalten das Pfand und bekommen fürs Altglas eine kleine Vergütung.</p>
@@ -816,11 +824,26 @@ function locate(btn){
 function captureDraft(){const d=ui.draft;if(!d)return;document.querySelectorAll("[data-field]").forEach(i=>d[i.dataset.field]=i.value)}
 document.addEventListener("input",e=>{if(e.target.dataset.field&&ui.draft)ui.draft[e.target.dataset.field]=e.target.value});
 document.addEventListener("change",e=>{
+  if(e.target.id==="avatar-in"&&e.target.files[0])uploadAvatar(e.target.files[0]);
   if(e.target.id==="photo"&&e.target.files[0]){captureDraft();compress(e.target.files[0]).then(({url,blob})=>{ui.draft.photo=url;ui.draft.photoBlob=blob;rerenderKeepScroll()}).catch(()=>toast("Foto konnte nicht geladen werden."))}
   if(e.target.dataset.field&&ui.draft)ui.draft[e.target.dataset.field]=e.target.value;
 });
 function compress(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{const m=1080,s=Math.min(1,m/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);const url=c.toDataURL("image/jpeg",.75);c.toBlob(b=>b?res({url,blob:b}):rej(new Error("blob")),"image/jpeg",.75)};img.src=r.result};r.readAsDataURL(file)})}
 
+/* Profilbild: quadratisch zuschneiden, verkleinern, hochladen */
+function squareJpeg(file,size=400){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{
+  const m=Math.min(img.width,img.height),sx=(img.width-m)/2,sy=(img.height-m)/2,c=document.createElement("canvas");c.width=c.height=size;
+  c.getContext("2d").drawImage(img,sx,sy,m,m,0,0,size,size);c.toBlob(b=>b?res(b):rej(new Error("blob")),"image/jpeg",.82)};img.src=r.result};r.readAsDataURL(file)})}
+async function uploadAvatar(file){
+  const box=$("#avedit");box&&box.classList.add("busy");
+  try{
+    const blob=await squareJpeg(file);const path=`${S.session}/avatar-${Date.now()}.jpg`;
+    const {error}=await sb.storage.from("photos").upload(path,blob,{contentType:"image/jpeg",upsert:false});if(error)throw error;
+    const url=sb.storage.from("photos").getPublicUrl(path).data.publicUrl;
+    await q(sb.from("profiles").update({avatar_url:url}).eq("id",S.session));await refresh();toast(`${ic(I.check)} Profilbild gespeichert`);
+  }catch(e){console.error(e);toast(esc(/avatar_url/.test(e.message||"")?"Profilbilder sind in der Datenbank noch nicht eingerichtet.":errText(e)))}
+  finally{const b=$("#avedit");b&&b.classList.remove("busy")}
+}
 async function publish(){
   captureDraft();const d=ui.draft;
   if(!(d.items.einweg||d.items.mehrweg||d.items.kisten||d.items.glas)){ui.newErr="Bitte gib an, was abgeholt werden soll.";rerenderKeepScroll();return}
