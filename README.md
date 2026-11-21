@@ -10,7 +10,7 @@ Uni-Projekt (Entrepreneurial Thinking). Drop verbindet Leute, die Pfandflaschen 
 - `demo.html` – Demo-Version mit Beispieldaten, speichert nur auf dem Gerät
 - `supabase/schema.sql` – Datenbank: Tabellen, Sicherheitsregeln, Abläufe
 - Backend: [Supabase](https://supabase.com) (Konten, Datenbank, Foto-Speicher, Live-Updates)
-- Karte: [Leaflet](https://leafletjs.com) mit Kartendaten von © OpenStreetMap-Mitwirkenden, Kacheln © CARTO
+- Karte: [Leaflet](https://leafletjs.com) mit Kartendaten von © OpenStreetMap-Mitwirkenden
 - Adresssuche: OpenStreetMap Nominatim
 
 ## Datenschutz im Ablauf
