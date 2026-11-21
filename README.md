@@ -2,8 +2,8 @@
 
 Uni-Projekt (Entrepreneurial Thinking). Drop verbindet Leute, die Pfandflaschen und Altglas loswerden wollen, mit Sammlern in der Nähe. Sammler behalten das Pfand und bekommen für Altglas eine kleine Vergütung (bar oder PayPal).
 
-- **App:** https://rubenfahrion.github.io/drop-app/
-- **Demo ohne Konto:** https://rubenfahrion.github.io/drop-app/demo.html
+- **App:** https://app-drop.github.io/
+- **Demo ohne Konto:** https://app-drop.github.io/demo.html
 
 ## Aufbau
 - `index.html` – die App (HTML, CSS, JavaScript in einer Datei)
