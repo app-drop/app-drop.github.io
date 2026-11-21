@@ -136,7 +136,9 @@ nav.bottom button svg{width:26px;height:26px}
 nav.bottom button[aria-current="page"]{color:var(--brand)}
 .badge{position:absolute;top:0;right:calc(50% - 22px);background:#FF3B30;color:#fff;font-size:11px;font-weight:600;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
 /* Forms */
-label.f{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:15px}
+label.f,div.f{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:15px}
+.card .chip{background:var(--surface-2)}
+.card .chip[aria-pressed="true"]{background:var(--brand)}
 .input,select.input,textarea.input{width:100%;border:0;background:var(--surface-2);border-radius:10px;padding:13px 14px;font-size:17px;outline:none;-webkit-appearance:none;appearance:none}
 .input:focus{box-shadow:0 0 0 2px var(--brand)}
 textarea.input{min-height:84px;resize:vertical}
@@ -337,7 +339,7 @@ const ts=s=>new Date(s).getTime();
 function mapListing(r,priv){
   const p=priv[r.id];
   return {id:r.id,ownerId:r.owner_id,createdAt:ts(r.created_at),items:{einweg:r.einweg,mehrweg:r.mehrweg,kisten:r.kisten,glas:r.glas},
-    glasFee:Number(r.glas_fee),photo:r.photo_url,district:r.district,pos:[r.lat,r.lng],when:r.when_label,handover:r.handover,
+    glasFee:Number(r.glas_fee),photo:r.photo_url,district:r.district,pos:[r.lat,r.lng],when:fmtWhen(r.when_label),endsAt:(parseWhen(r.when_label)||{}).end||null,handover:r.handover,
     payment:r.payment,note:r.note,status:r.status,collectorId:r.collector_id,ownerRated:r.owner_rated,collectorRated:r.collector_rated,paid:r.paid,
     street:p?p.street:"",exact:p&&p.lat!=null?[p.lat,p.lng]:null};
 }
@@ -504,7 +506,7 @@ function renderHome(){
   const tours=S.listings.filter(l=>l.collectorId===S.session&&l.status!=="abgeschlossen");
   const done=S.listings.filter(l=>l.collectorId===S.session&&l.status==="abgeschlossen");
   const earned=done.reduce((a,l)=>a+totalValue(l),0);
-  const near=S.listings.filter(l=>l.status==="offen"&&l.ownerId!==S.session).sort((a,b)=>km(myPos(),a.pos)-km(myPos(),b.pos)).slice(0,3);
+  const near=S.listings.filter(l=>l.status==="offen"&&l.ownerId!==S.session&&!(l.endsAt&&l.endsAt<now())).sort((a,b)=>km(myPos(),a.pos)-km(myPos(),b.pos)).slice(0,3);
   const avg=avgRating(u);
   return `${hi}
     <div class="tiles">
@@ -523,7 +525,7 @@ function renderHome(){
 
 /* ---------- Render: Explore ---------- */
 function filtered(){
-  let ls=S.listings.filter(l=>l.status==="offen"&&l.ownerId!==S.session);
+  let ls=S.listings.filter(l=>l.status==="offen"&&l.ownerId!==S.session&&!(l.endsAt&&l.endsAt<now()));
   if(ui.filter==="pfand")ls=ls.filter(l=>bottleCount(l)||l.items.kisten);
   if(ui.filter==="glas")ls=ls.filter(l=>l.items.glas);
   if(ui.filter==="fee")ls=ls.filter(l=>feeValue(l)>0);
@@ -596,15 +598,45 @@ async function geocode(street,district){
 }
 function fuzz(p,m=250){const dLat=(Math.random()-.5)*2*m/111000,dLng=(Math.random()-.5)*2*m/(111000*Math.cos(p[0]*Math.PI/180));return [p[0]+dLat,p[1]+dLng]}
 
+/* ---------- Zeitfenster ---------- */
+const TIMES=[];for(let h=6;h<=22;h++){TIMES.push(String(h).padStart(2,"0")+":00");if(h<22)TIMES.push(String(h).padStart(2,"0")+":30")}
+function dayDate(i){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+i);return d}
+function isoDay(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function relDay(d){const t=dayDate(0),diff=Math.round((d-t)/DAY);
+  if(diff===0)return"Heute";if(diff===1)return"Morgen";
+  return d.toLocaleDateString("de-DE",{weekday:"short",day:"numeric",month:"numeric"}).replace(/\.$/,".")}
+function chipDay(i){const d=dayDate(i);return i<2?relDay(d):d.toLocaleDateString("de-DE",{weekday:"short"})+" "+d.getDate()+"."}
+/* Gespeichert wird "2026-11-24|17:00|20:00", angezeigt wird "Morgen, 17:00–20:00 Uhr" */
+function parseWhen(s){const m=/^(\d{4})-(\d{2})-(\d{2})\|(\d{2}:\d{2})\|(\d{2}:\d{2})$/.exec(s||"");if(!m)return null;
+  const d=new Date(+m[1],+m[2]-1,+m[3]);const [eh,em]=m[5].split(":").map(Number);const end=new Date(d);end.setHours(eh,em,0,0);return {d,from:m[4],to:m[5],end:end.getTime()}}
+function fmtWhen(s){const p=parseWhen(s);return p?`${relDay(p.d)}, ${p.from}–${p.to} Uhr`:(s||"")}
+function whenKey(d){return `${isoDay(dayDate(d.day))}|${d.from}|${d.to}`}
+function defaultSlot(){const n=new Date();let mins=Math.ceil((n.getHours()*60+n.getMinutes()+30)/30)*30;mins=Math.max(mins,8*60);
+  if(mins>20*60)return {day:1,from:"17:00",to:"20:00"};
+  const f=Math.min(mins,21*60),t=Math.min(f+180,22*60),hm=x=>String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60).padStart(2,"0");
+  return {day:0,from:hm(f),to:hm(t)}}
+function slotError(d){if(d.to<=d.from)return"Das Ende muss nach dem Beginn liegen.";
+  if(d.day===0){const n=new Date(),hm=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");if(d.to<=hm)return"Dieses Zeitfenster ist heute schon vorbei."}
+  return""}
+function whenPicker(d){
+  const err=slotError(d);
+  return `<div class="f"><span>Tag</span><div class="chips" role="group" aria-label="Tag">${[0,1,2,3,4,5,6].map(i=>`<button type="button" class="chip" data-action="day" data-v="${i}" aria-pressed="${d.day===i}">${chipDay(i)}</button>`).join("")}</div></div>
+    <div class="row" style="gap:10px;align-items:flex-end">
+      <label class="f" for="n-from" style="flex:1">Von<select class="input" id="n-from" data-field="from">${TIMES.slice(0,-1).map(t=>`<option ${t===d.from?"selected":""}>${t}</option>`).join("")}</select></label>
+      <span style="padding-bottom:14px" class="muted">–</span>
+      <label class="f" for="n-to" style="flex:1">Bis<select class="input" id="n-to" data-field="to">${TIMES.slice(1).map(t=>`<option ${t===d.to?"selected":""} ${t<=d.from?"disabled":""}>${t}</option>`).join("")}</select></label>
+    </div>
+    <div class="${err?"err":"tiny muted"}" id="slot-msg">${err?esc(err):`Abholung: <b>${esc(fmtWhen(whenKey(d)))}</b>`}</div>`;
+}
+
 /* ---------- Render: New listing ---------- */
-function newDraft(){return {items:{einweg:0,mehrweg:0,kisten:0,glas:0},glasFee:1,photo:null,district:me().district,street:"",when:"Heute, 18–20 Uhr",handover:"persönlich",payment:"bar",note:""}}
+function newDraft(){return {items:{einweg:0,mehrweg:0,kisten:0,glas:0},glasFee:1,photo:null,district:me().district,street:"",...defaultSlot(),handover:"persönlich",payment:"bar",note:""}}
 function renderNew(){
   const d=ui.draft||(ui.draft=newDraft());
   const tmp={items:d.items,glasFee:d.glasFee};
   const pf=pfandValue(tmp),fee=feeValue(tmp);
   const st=(k,lab,sub)=>`<div class="stepper"><div><div style="font-weight:600">${lab}</div><div class="tiny muted">${sub}</div></div>
     <div class="ctl"><button type="button" data-action="step" data-k="${k}" data-d="${k==="einweg"||k==="mehrweg"?-5:-1}" aria-label="${lab} weniger">−</button><output aria-live="polite">${d.items[k]}</output><button type="button" data-action="step" data-k="${k}" data-d="${k==="einweg"||k==="mehrweg"?5:1}" aria-label="${lab} mehr">+</button></div></div>`;
-  const WHEN=["Heute, 18–20 Uhr","Morgen, 8–12 Uhr","Morgen, 17–20 Uhr","Samstag, 10–14 Uhr"];
   return `<div class="topbar"><button class="iconbtn" data-action="back" aria-label="Zurück">${I.back}</button><h2 style="flex:1">Abholung anfragen</h2></div>
   <section class="card stack"><h3>Was hast du?</h3>
     <div>${st("einweg","Einwegflaschen & Dosen","0,25 € Pfand · +5 pro Tipp")}${st("mehrweg","Mehrwegflaschen","meist 0,08–0,15 € · +5 pro Tipp")}${st("kisten","Getränkekisten","1,50 € Kistenpfand")}${st("glas","Beutel Altglas","kein Pfand, Sammler bekommt Vergütung")}</div>
@@ -624,7 +656,7 @@ function renderNew(){
     <label class="f" for="n-district">Stadtteil<select class="input" id="n-district" data-field="district">${Object.keys(DISTRICTS).map(x=>`<option ${x===d.district?"selected":""}>${x}</option>`).join("")}</select></label>
     <label class="f" for="n-street">Straße und Hausnummer<input class="input" id="n-street" data-field="street" value="${esc(d.street)}" placeholder="z. B. Bebelstraße 21" autocomplete="street-address"></label>
     <div class="tiny muted">Die genaue Adresse sieht nur der Sammler, der deine Abholung annimmt.</div>
-    <div class="f"><span>Zeitfenster</span><div class="chips" role="group">${WHEN.map(w=>`<button type="button" class="chip" data-action="when" data-v="${esc(w)}" aria-pressed="${d.when===w}">${w}</button>`).join("")}</div></div>
+    <div class="stack" style="gap:10px"><h3 style="font-size:15px;font-weight:500">Wann soll abgeholt werden?</h3>${whenPicker(d)}</div>
     <div class="f"><span>Übergabe</span><div class="choice" role="group">
       <button type="button" data-action="hand" data-v="persönlich" aria-pressed="${d.handover==="persönlich"}">Persönlich<small>ich bin zu Hause</small></button>
       <button type="button" data-action="hand" data-v="kontaktlos" aria-pressed="${d.handover==="kontaktlos"}">Kontaktlos<small>vor die Tür gestellt</small></button></div></div>
@@ -651,7 +683,7 @@ function renderDetail(){
   const pf=pfandValue(l),fee=feeValue(l);
   let actions="";
   if(l.status==="offen"&&!iAmOwner)actions=`<button class="btn block" data-action="accept" data-id="${l.id}">${I.check} Abholung übernehmen</button>`;
-  if(l.status==="offen"&&iAmOwner)actions=`<div class="card small muted">Sammler in deiner Nähe sehen deine Anfrage jetzt. Du bekommst einen Hinweis, sobald jemand annimmt.</div><button class="btn danger block" data-action="delete" data-id="${l.id}">Anfrage löschen</button>`;
+  if(l.status==="offen"&&iAmOwner)actions=`${l.endsAt&&l.endsAt<now()?`<div class="card small" style="color:var(--warn)">Das Zeitfenster ist abgelaufen, Sammler sehen diese Anfrage nicht mehr. Lösche sie und stell sie mit einer neuen Zeit ein.</div>`:`<div class="card small muted">Sammler in deiner Nähe sehen deine Anfrage jetzt. Du bekommst einen Hinweis, sobald jemand annimmt.</div>`}<button class="btn danger block" data-action="delete" data-id="${l.id}">Anfrage löschen</button>`;
   if(l.status==="angenommen"&&iAmCol)actions=`<button class="btn block" data-action="picked" data-id="${l.id}">${I.check} Als abgeholt markieren</button><button class="btn ghost block" data-action="chat" data-id="${l.id}">${I.chat} Nachricht an ${esc(owner.name.split(" ")[0])}</button><button class="btn danger block" data-action="release" data-id="${l.id}">Abholung abgeben</button>`;
   if(l.status==="angenommen"&&iAmOwner)actions=`<button class="btn ghost block" data-action="chat" data-id="${l.id}">${I.chat} Nachricht an ${esc(col.name.split(" ")[0])}</button>`;
   if(l.status==="abgeholt"&&iAmOwner)actions=`<button class="btn block" data-action="paysheet" data-id="${l.id}">${fee?`Vergütung zahlen (${eur(fee)})`:"Abholung bestätigen"}</button>`;
@@ -781,7 +813,7 @@ document.addEventListener("click",async e=>{
     case"step":{const d=ui.draft,k=el.dataset.k;captureDraft();d.items[k]=Math.max(0,d.items[k]+Number(el.dataset.d));rerenderKeepScroll();break}
     case"fee":captureDraft();ui.draft.glasFee=Number(v);rerenderKeepScroll();break;
     case"pay":captureDraft();ui.draft.payment=v;rerenderKeepScroll();break;
-    case"when":captureDraft();ui.draft.when=v;rerenderKeepScroll();break;
+    case"day":captureDraft();ui.draft.day=Number(v);rerenderKeepScroll();break;
     case"hand":captureDraft();ui.draft.handover=v;rerenderKeepScroll();break;
     case"rmphoto":captureDraft();ui.draft.photo=null;ui.draft.photoBlob=null;rerenderKeepScroll();break;
     case"publish":busy(el,publish);break;
@@ -824,6 +856,9 @@ function locate(btn){
 function captureDraft(){const d=ui.draft;if(!d)return;document.querySelectorAll("[data-field]").forEach(i=>d[i.dataset.field]=i.value)}
 document.addEventListener("input",e=>{if(e.target.dataset.field&&ui.draft)ui.draft[e.target.dataset.field]=e.target.value});
 document.addEventListener("change",e=>{
+  if((e.target.id==="n-from"||e.target.id==="n-to")&&ui.draft){captureDraft();const d=ui.draft;
+    if(d.to<=d.from){const i=TIMES.indexOf(d.from);d.to=TIMES[Math.min(i+4,TIMES.length-1)]}
+    rerenderKeepScroll();return}
   if(e.target.id==="avatar-in"&&e.target.files[0])uploadAvatar(e.target.files[0]);
   if(e.target.id==="photo"&&e.target.files[0]){captureDraft();compress(e.target.files[0]).then(({url,blob})=>{ui.draft.photo=url;ui.draft.photoBlob=blob;rerenderKeepScroll()}).catch(()=>toast("Foto konnte nicht geladen werden."))}
   if(e.target.dataset.field&&ui.draft)ui.draft[e.target.dataset.field]=e.target.value;
@@ -848,6 +883,7 @@ async function publish(){
   captureDraft();const d=ui.draft;
   if(!(d.items.einweg||d.items.mehrweg||d.items.kisten||d.items.glas)){ui.newErr="Bitte gib an, was abgeholt werden soll.";rerenderKeepScroll();return}
   if(!d.street.trim()){ui.newErr="Bitte gib Straße und Hausnummer an.";rerenderKeepScroll();$("#n-street")?.focus();return}
+  if(slotError(d)){ui.newErr=slotError(d);rerenderKeepScroll();return}
   ui.newErr="";
   const id=crypto.randomUUID();
   let photo_url=null;
@@ -860,7 +896,7 @@ async function publish(){
   const exact=await geocode(d.street.trim(),d.district);
   const pub=exact?fuzz(exact,250):fuzz(DISTRICTS[d.district],500);
   await q(sb.from("listings").insert({id,owner_id:S.session,einweg:d.items.einweg,mehrweg:d.items.mehrweg,kisten:d.items.kisten,glas:d.items.glas,
-    glas_fee:d.items.glas?d.glasFee:0,photo_url,district:d.district,lat:pub[0],lng:pub[1],when_label:d.when,handover:d.handover,payment:d.payment,note:d.note.trim()}));
+    glas_fee:d.items.glas?d.glasFee:0,photo_url,district:d.district,lat:pub[0],lng:pub[1],when_label:whenKey(d),handover:d.handover,payment:d.payment,note:d.note.trim()}));
   await q(sb.from("listing_private").insert({listing_id:id,street:d.street.trim(),lat:exact?exact[0]:null,lng:exact?exact[1]:null}));
   ui.draft=null;await loadAll();
   toast(`${ic(I.check)} Anfrage veröffentlicht. Sammler in der Nähe sehen sie jetzt.`);
