@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F2F7">
-<title>Drop – Leergut-Abholung</title>
+<title>Drop – Demo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
 /* Plan: Apple-Look. Weiß und Systemgrau als Fläche, ein Grün als einzige Akzentfarbe, große fette Titel, gruppierte Listen, Tab-Leiste unten. */
 :root{
@@ -226,6 +227,22 @@ textarea.input{min-height:84px;resize:vertical}
 .review{border-top:.5px solid var(--line);padding-top:12px}
 .review:first-child{border-top:0;padding-top:0}
 .list-h{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;padding:0 16px;margin-bottom:-14px}
+.lmap{height:440px;width:100%;background:var(--surface-2)}
+.dmap{height:190px;border-radius:var(--r);overflow:hidden;background:var(--surface-2);z-index:0}
+.mapbox{isolation:isolate}
+.leaflet-container{font-family:var(--font-body)}
+.osm-tiles{filter:saturate(.75) contrast(.95) brightness(1.03)}
+.leaflet-control-attribution{font-size:10px!important}
+.pinwrap{background:none;border:0}
+.pinb{display:inline-block;transform:translate(-50%,-50%);background:var(--brand);color:#fff;font-weight:700;font-size:13px;padding:4px 9px;border-radius:999px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);white-space:nowrap;font-variant-numeric:tabular-nums;cursor:pointer}
+.pinb.w{background:var(--warn)}
+.pinb.sel{transform:translate(-50%,-50%) scale(1.2);box-shadow:0 0 0 4px rgba(30,158,74,.35),0 2px 8px rgba(0,0,0,.25)}
+.pinb.mini{transform:none;width:14px;height:14px;padding:0}
+.medot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#0A84FF;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.locbtn{position:absolute;right:10px;bottom:24px;z-index:500;width:40px;height:40px;border-radius:10px;border:0;background:var(--surface);color:var(--info);box-shadow:0 2px 8px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}
+.locbtn svg{width:22px;height:22px}
+.leaflet-top.leaflet-right .leaflet-control-zoom{border:0;box-shadow:0 2px 8px rgba(0,0,0,.2);border-radius:10px;overflow:hidden}
+#mapcard .lcard{box-shadow:var(--shadow)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -233,6 +250,7 @@ textarea.input{min-height:84px;resize:vertical}
 <div class="app" id="app"></div>
 <div id="layer"></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
 "use strict";
 /* ---------- Icons ---------- */
@@ -490,34 +508,47 @@ function renderExplore(){
     ${ui.exploreMode==="map"?renderMap(ls):(ls.length?group(ls):`<div class="empty">Keine Anfragen für diesen Filter.</div>`)}`;
 }
 
-/* ---------- Map (stilisierte Stuttgart-Karte) ---------- */
-const MB={n:48.865,s:48.690,w:9.060,e:9.300,W:400,H:430};
-function proj(p){return [ (p[1]-MB.w)/(MB.e-MB.w)*MB.W, (MB.n-p[0])/(MB.n-MB.s)*MB.H ]}
+/* ---------- Echte Karte (Leaflet + OpenStreetMap) ---------- */
+const TILE_URL="https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const TILE_ATTR='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende';
+let maps=[];
+function clearMaps(){maps.forEach(m=>{try{m.off();m.stop();m.remove()}catch(e){}});maps=[]}
+function baseMap(el,center,zoom,opts={}){
+  const m=L.map(el,Object.assign({zoomControl:false,attributionControl:true,fadeAnimation:false},opts)).setView(center,zoom);
+  L.tileLayer(TILE_URL,{attribution:TILE_ATTR,maxZoom:19,className:"osm-tiles"}).addTo(m);
+  m.attributionControl.setPrefix(false);maps.push(m);return m;
+}
+function pinIcon(l,sel){const fee=feeValue(l)>0;return L.divIcon({className:"pinwrap",html:`<span class="pinb${fee?"":" w"}${sel?" sel":""}">${eur(totalValue(l)).replace(/,00/,"")}</span>`,iconSize:null})}
 function renderMap(ls){
-  const river=[[48.735,9.300],[48.752,9.280],[48.765,9.262],[48.778,9.252],[48.790,9.236],[48.800,9.222],[48.810,9.212],[48.822,9.212],[48.834,9.224],[48.848,9.234],[48.865,9.240]].map(proj);
-  const rp="M"+river.map(p=>p.map(v=>v.toFixed(1)).join(",")).join(" L");
-  const forests=[[48.762,9.100,46,34],[48.740,9.195,40,26],[48.790,9.145,22,16],[48.706,9.135,34,18],[48.830,9.090,26,18]];
-  const parks=[[48.788,9.192,8,22]];
   const sel=ui.mapSel&&ls.find(l=>l.id===ui.mapSel);
-  const mp=proj(myPos());
-  return `<div class="mapbox"><svg class="map" viewBox="0 0 ${MB.W} ${MB.H}" role="img" aria-label="Karte von Stuttgart mit ${ls.length} Abholorten">
-    <defs><pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M22 0H0V22" fill="none" stroke="var(--line)" stroke-width=".6"/></pattern></defs>
-    <rect width="100%" height="100%" fill="var(--land)"/>
-    ${forests.map(f=>{const c=proj(f);return `<ellipse cx="${c[0]}" cy="${c[1]}" rx="${f[2]}" ry="${f[3]}" fill="var(--forest)"/>`}).join("")}
-    ${parks.map(f=>{const c=proj(f);return `<ellipse cx="${c[0]}" cy="${c[1]}" rx="${f[2]}" ry="${f[3]}" fill="var(--forest)" transform="rotate(-35 ${c[0]} ${c[1]})"/>`}).join("")}
-    <path d="${rp}" fill="none" stroke="var(--water)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="${proj([48.796,9.240])[0]}" y="${proj([48.796,9.240])[1]}" class="lbl" style="font-style:italic">Neckar</text>
-    ${Object.entries(DISTRICTS).map(([n,p])=>{const c=proj(p);return `<text x="${c[0]}" y="${c[1]+16}" text-anchor="middle" class="lbl">${n}</text>`}).join("")}
-    <g class="me"><circle cx="${mp[0]}" cy="${mp[1]}" r="12" opacity=".2"/><circle cx="${mp[0]}" cy="${mp[1]}" r="5"/></g>
-    ${ls.map(l=>{const c=proj(l.pos);const col=feeValue(l)>0?"var(--brand)":"var(--warn)";const s=ui.mapSel===l.id;
-      return `<g class="pin ${s?"sel":""}" data-action="mapsel" data-id="${l.id}" role="button" tabindex="0" aria-label="${esc(title(l))}, ${esc(l.district)}">
-        <circle cx="${c[0]}" cy="${c[1]}" r="${s?15:12}" fill="${col}" stroke="#fff" stroke-width="2.5"/><text x="${c[0]}" y="${c[1]+3.3}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${Math.round(totalValue(l))}€</text></g>`}).join("")}
-  </svg>
-  ${sel?`<div class="mapcard">${lcard(sel)}</div>`:""}
-  </div>
-  <div class="row small muted wrap"><span class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="var(--brand)"/></svg>mit Altglas-Vergütung</span><span class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="6" fill="var(--warn)"/></svg>nur Pfand</span><span class="row"><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="var(--info)"/></svg>du</span></div>
-  <a class="maplink" href="${amaps(sel?"Stuttgart-"+sel.district:"Stuttgart")}" target="_blank" rel="noopener"><span class="mi">${I.map}</span><span><b>${sel?"Stuttgart-"+esc(sel.district):"Stuttgart"} in Apple Karten</b><br><span class="tiny muted">Echte Karte mit Straßen und Route</span></span><span class="chev">${I.chev}</span></a>
-  <div class="tiny muted">Übersicht der Stadtteile. Die genaue Adresse siehst du erst, wenn du eine Abholung annimmst.</div>`;
+  return `<div class="mapbox"><div id="lmap" class="lmap" role="region" aria-label="Karte mit ${ls.length} Abholorten"></div></div>
+  <div id="mapcard">${sel?lcard(sel):`<div class="tiny muted" style="padding:0 4px">Tippe auf einen Preis, um die Anfrage zu sehen. Die Pins zeigen den ungefähren Ort, die genaue Adresse siehst du nach dem Annehmen.</div>`}</div>
+  <div class="row small muted wrap"><span class="row"><span class="pinb mini"></span>mit Altglas-Vergütung</span><span class="row"><span class="pinb w mini"></span>nur Pfand</span><span class="row"><span class="medot"></span>du</span></div>`;
+}
+function initExploreMap(ls){
+  const el=$("#lmap");if(!el||!window.L)return;
+  const m=baseMap(el,ui.mapView?ui.mapView.c:myPos(),ui.mapView?ui.mapView.z:12);
+  L.control.zoom({position:"topright"}).addTo(m);
+  L.circleMarker(myPos(),{radius:7,color:"#fff",weight:3,fillColor:"#0A84FF",fillOpacity:1}).addTo(m).bindTooltip("Dein Stadtteil");
+  const markers={};
+  ls.forEach(l=>{markers[l.id]=L.marker(l.pos,{icon:pinIcon(l,ui.mapSel===l.id),keyboard:true,title:title(l)}).addTo(m).on("click",()=>{
+    const prev=ui.mapSel;ui.mapSel=l.id;
+    if(prev&&markers[prev]){const p=LS(prev);p&&markers[prev].setIcon(pinIcon(p,false))}
+    markers[l.id].setIcon(pinIcon(l,true));$("#mapcard").innerHTML=lcard(l);
+  })});
+  if(!ui.mapView&&ls.length){m.fitBounds(L.latLngBounds([myPos(),...ls.map(l=>l.pos)]).pad(.15),{maxZoom:15,animate:false})}
+  m.on("moveend",()=>{const c=m.getCenter();ui.mapView={c:[c.lat,c.lng],z:m.getZoom()}});
+}
+function initDetailMap(l,party){
+  const el=$("#dmap");if(!el||!window.L)return;
+  const m=baseMap(el,l.pos,party?16:14,{dragging:!L.Browser.mobile,scrollWheelZoom:false,tap:false});
+  if(party)L.marker(l.pos,{icon:L.divIcon({className:"pinwrap",html:`<span class="pinb">${esc(l.street||"Hier")}</span>`,iconSize:null})}).addTo(m);
+  else L.circle(l.pos,{radius:450,color:"#1E9E4A",weight:2,fillColor:"#1E9E4A",fillOpacity:.12}).addTo(m);
+}
+function afterRender(){
+  clearMaps();
+  if(view.name==="explore"&&ui.exploreMode==="map")initExploreMap(filtered());
+  if(view.name==="detail"){const l=LS(view.id);if(l)initDetailMap(l,l.ownerId===S.session||l.collectorId===S.session)}
 }
 
 /* ---------- Render: New listing ---------- */
@@ -605,6 +636,7 @@ function renderDetail(){
     ${fee?`<dt>Bezahlung</dt><dd>${l.payment==="paypal"?"PayPal":"Bar"} (${eur(fee)} fürs Altglas)</dd>`:""}
     ${l.note?`<dt>Hinweis</dt><dd style="font-weight:400">${esc(l.note)}</dd>`:""}
   </dl>
+  <div id="dmap" class="dmap" aria-label="Karte"></div>
   <a class="maplink" href="${amaps(showAddr?l.street+", Stuttgart":"Stuttgart-"+l.district)}" target="_blank" rel="noopener"><span class="mi">${I.map}</span><span><b>${showAddr?"Route in Apple Karten":"Stadtteil in Apple Karten"}</b><br><span class="tiny muted">${showAddr?esc(l.street)+", Stuttgart":"Stuttgart-"+esc(l.district)}</span></span><span class="chev">${I.chev}</span></a>
   ${other?`<button class="card person" style="text-align:left;width:100%" data-action="profile" data-id="${other.id}">${avatar(other)}<span style="flex:1"><b>${esc(other.name)}</b><br><span class="tiny muted">${iAmOwner?"Sammler":"Gibt ab"} · ${esc(other.district)}</span><br>${ratingLine(other)}</span></button>`:""}
   ${actions}`;
@@ -660,7 +692,7 @@ function renderProfile(){
 /* ---------- Main render ---------- */
 function render(){
   const app=$("#app");
-  if(!S.session||!U(S.session)){app.innerHTML=renderLogin();return}
+  if(!S.session||!U(S.session)){clearMaps();app.innerHTML=renderLogin();return}
   const nav=!["chat","new","detail"].includes(view.name)&&!(view.name==="profile"&&view.id&&view.id!==S.session);
   let body="";
   switch(view.name){
@@ -676,7 +708,8 @@ function render(){
     <button data-action="nav" data-v="chats" ${cur==="chats"?'aria-current="page"':""}>${I.chat}Chats${tu?`<span class="badge">${tu}</span>`:""}</button>
     <button data-action="nav" data-v="profile" ${cur==="profile"?'aria-current="page"':""}>${I.user}Profil</button>
   </div></nav>`:""}`;
-  if(view.name==="chat"){const m=$("#msgs");window.scrollTo(0,document.body.scrollHeight)}
+  afterRender();
+  if(view.name==="chat"){window.scrollTo(0,document.body.scrollHeight)}
 }
 
 /* ---------- Actions ---------- */
