@@ -141,6 +141,16 @@ drop policy if exists "bewertungen lesen" on public.ratings;
 create policy "bewertungen lesen" on public.ratings for select to authenticated using (true);
 -- Bewertungen werden nur über rate_listing() geschrieben.
 
+
+-- ============ Zugriffsrechte für eingeloggte Nutzer ============
+-- (Neuere Supabase-Projekte geben neue Tabellen nicht automatisch frei.)
+grant usage on schema public to anon, authenticated;
+grant select, insert, update on public.profiles to authenticated;
+grant select, insert, delete on public.listings to authenticated;
+grant select, insert on public.listing_private to authenticated;
+grant select, insert on public.messages to authenticated;
+grant select on public.ratings to authenticated;
+
 -- ============ Funktionen für den Ablauf ============
 
 create or replace function public.sys_msg(p_listing uuid, p_text text)
