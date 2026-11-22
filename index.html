@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F2F2F7">
+<meta name="theme-color" content="#E6F4EA">
 <title>Drop – Leergut-Abholung</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="manifest" href="manifest.webmanifest">
@@ -279,6 +279,97 @@ textarea.input{min-height:84px;resize:vertical}
 .tut .dots span.on{width:22px;background:var(--brand)}
 .tut .navrow{display:flex;gap:10px}
 .tut .navrow .btn{flex:1}
+/* ===== Liquid Glass ===== */
+:root{
+  --glass:rgba(255,255,255,.58);
+  --glass-strong:rgba(255,255,255,.78);
+  --glass-edge:rgba(255,255,255,.75);
+  --glass-line:rgba(255,255,255,.55);
+  --glass-shadow:0 8px 32px rgba(16,60,35,.10),0 1px 2px rgba(16,60,35,.06);
+  --glass-hi:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.25);
+  --blur:saturate(180%) blur(22px);
+  --bg-a:#DFF5E6;--bg-b:#E9F3FF;--bg-c:#F4F9EC;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --glass:rgba(38,40,44,.52);--glass-strong:rgba(44,46,50,.78);--glass-edge:rgba(255,255,255,.16);--glass-line:rgba(255,255,255,.10);
+  --glass-shadow:0 10px 36px rgba(0,0,0,.45);--glass-hi:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(255,255,255,.04);
+  --bg-a:#0C2416;--bg-b:#0B1A2A;--bg-c:#101410;}}
+:root[data-theme="dark"]{
+  --glass:rgba(38,40,44,.52);--glass-strong:rgba(44,46,50,.78);--glass-edge:rgba(255,255,255,.16);--glass-line:rgba(255,255,255,.10);
+  --glass-shadow:0 10px 36px rgba(0,0,0,.45);--glass-hi:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(255,255,255,.04);
+  --bg-a:#0C2416;--bg-b:#0B1A2A;--bg-c:#101410;}
+body{background:var(--bg)}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;
+  background:radial-gradient(40% 35% at 15% 10%,var(--bg-a),transparent 70%),radial-gradient(45% 40% at 90% 25%,var(--bg-b),transparent 70%),
+  radial-gradient(50% 45% at 30% 85%,var(--bg-c),transparent 70%),radial-gradient(35% 30% at 85% 90%,var(--bg-a),transparent 70%),var(--bg)}
+.glass,.card,.group,.tile,.empty,.maplink,.lcard,.chatitem,.dmap,.mapbox{
+  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  border:1px solid var(--glass-edge);box-shadow:var(--glass-hi),var(--glass-shadow)}
+.card,.group,.tile,.empty,.maplink,.lcard{border-radius:22px}
+.group{border-radius:24px}
+.group .lcard{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.group .lcard+.lcard{box-shadow:inset 0 1px 0 var(--glass-line)}
+.group .chatitem{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.group>*+*{border-top:1px solid var(--glass-line)}
+.lcard:active,.chatitem:active{background:color-mix(in srgb,var(--glass-strong) 70%,transparent)}
+.thumb{border-radius:16px;box-shadow:inset 0 0 0 1px var(--glass-line)}
+.getpill{background:color-mix(in srgb,var(--brand) 12%,var(--glass-strong));box-shadow:var(--glass-hi);border:1px solid var(--glass-edge)}
+.pill{box-shadow:inset 0 0 0 1px var(--glass-line)}
+/* Buttons */
+.btn{border-radius:999px;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 18px color-mix(in srgb,var(--brand) 30%,transparent)}
+.btn::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 55%)}
+.btn.ghost,.btn.outline,.btn.danger{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);box-shadow:var(--glass-hi),var(--glass-shadow)}
+.btn.ghost{color:var(--brand)}
+.btn.white{box-shadow:inset 0 1px 0 #fff,0 6px 18px rgba(0,0,0,.12)}
+.iconbtn{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);box-shadow:var(--glass-hi),var(--glass-shadow)}
+/* Segmented controls & chips */
+.seg{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);border-radius:999px;padding:3px;box-shadow:var(--glass-hi),var(--glass-shadow)}
+.seg button{border-radius:999px;padding:8px 12px}
+.seg button[aria-pressed="true"]{background:var(--glass-strong);box-shadow:var(--glass-hi),0 2px 10px rgba(0,0,0,.10)}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{background:rgba(255,255,255,.16)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{background:rgba(255,255,255,.16)}}
+.chip,.card .chip{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);box-shadow:var(--glass-hi)}
+.chip[aria-pressed="true"],.card .chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 4px 12px color-mix(in srgb,var(--brand) 35%,transparent)}
+.choice button,.input,select.input,textarea.input,.photo-drop,.stepper .ctl{background:color-mix(in srgb,var(--glass-strong) 75%,transparent);border:1px solid var(--glass-edge);box-shadow:var(--glass-hi)}
+.input:focus{box-shadow:var(--glass-hi),0 0 0 3px color-mix(in srgb,var(--brand) 45%,transparent)}
+.choice button[aria-pressed="true"]{background:color-mix(in srgb,var(--brand) 14%,var(--glass-strong));box-shadow:inset 0 0 0 2px var(--brand),var(--glass-hi)}
+/* Floating tab bar */
+nav.bottom{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));padding:6px;border-radius:999px;border:1px solid var(--glass-edge);
+  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--glass-hi),0 12px 40px rgba(16,60,35,.18);max-width:540px;margin:0 auto}
+nav.bottom .in{gap:2px}
+nav.bottom button{border-radius:999px;padding:7px 0 6px;transition:background .2s,color .2s}
+nav.bottom button[aria-current="page"]{background:color-mix(in srgb,var(--brand) 14%,var(--glass-strong));box-shadow:var(--glass-hi)}
+nav.bottom button svg{width:24px;height:24px}
+main{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+/* Hero */
+.hero{border-radius:28px;border:1px solid rgba(255,255,255,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 16px 40px rgba(23,128,59,.28)}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(160deg,rgba(255,255,255,.28),rgba(255,255,255,0) 45%)}
+/* Sheets, toast, composer, chat */
+.scrim{background:rgba(0,0,0,.22);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.sheet{background:var(--glass-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);border-radius:32px;margin:0 8px calc(8px + env(safe-area-inset-bottom));width:calc(100% - 16px);box-shadow:var(--glass-hi),0 20px 60px rgba(0,0,0,.25)}
+.toast{background:var(--glass-strong);border:1px solid var(--glass-edge);border-radius:999px;box-shadow:var(--glass-hi),0 10px 30px rgba(0,0,0,.16);padding:12px 18px}
+.composer{left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));padding:8px;border-radius:28px;border:1px solid var(--glass-edge);background:var(--glass);box-shadow:var(--glass-hi),0 12px 40px rgba(0,0,0,.15);max-width:560px;margin:0 auto}
+.composer input{background:var(--glass-strong);border:1px solid var(--glass-edge)}
+.quick button{background:var(--glass-strong);border:1px solid var(--glass-edge);box-shadow:var(--glass-hi)}
+.msg.them{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);box-shadow:var(--glass-hi)}
+.msg.me{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 4px 14px color-mix(in srgb,var(--brand) 25%,transparent)}
+/* Map */
+.mapbox,.dmap{border-radius:24px;overflow:hidden}
+.locbtn,.leaflet-top.leaflet-right .leaflet-control-zoom{background:var(--glass-strong)!important;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge)!important;box-shadow:var(--glass-hi),0 4px 16px rgba(0,0,0,.18)!important;border-radius:14px}
+.leaflet-control-zoom a{background:transparent!important}
+.pinb{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 12px rgba(0,0,0,.25)}
+/* Login & tutorial */
+.login{background:transparent}
+.login .input,.login .seg,.demo-acc button{background:var(--glass);border:1px solid var(--glass-edge);box-shadow:var(--glass-hi)}
+.tut{background:transparent;-webkit-backdrop-filter:saturate(180%) blur(30px);backdrop-filter:saturate(180%) blur(30px)}
+.tut::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(50% 40% at 20% 15%,var(--bg-a),transparent 70%),radial-gradient(50% 40% at 85% 80%,var(--bg-b),transparent 70%),color-mix(in srgb,var(--bg) 88%,transparent)}
+.tut li{background:var(--glass);border:1px solid var(--glass-edge);box-shadow:var(--glass-hi)}
+.tut .art{box-shadow:var(--glass-hi),var(--glass-shadow);border:1px solid var(--glass-edge)}
+.tut .art .mini{background:var(--glass-strong);border:1px solid var(--glass-edge)}
+.avedit .cam{border-color:var(--glass-strong)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root{--glass:rgba(255,255,255,.92);--glass-strong:#fff}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
